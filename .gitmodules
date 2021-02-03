@@ -1,0 +1,6 @@
+[submodule "GMMA"]
+	path = GMMA
+	url = https://github.com/wayneweiqiang/GMMA.git
+[submodule "PhaseNet"]
+	path = PhaseNet
+	url = https://github.com/wayneweiqiang/PhaseNet.git
