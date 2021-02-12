@@ -38,7 +38,7 @@ The consumer will read the messages from the Kafka cluster.
 
 - Install Spark and setup the env for Spark https://spark.apache.org/downloads.html. I was using `spark-2.3.3-bin-hadoop2.7`, but I think you should choose `2.4.7` and it should work too 
 
-- Uncomment some lines in `producer.py`, which basically sends integers to Kafka
+- Uncomment some lines in `producer.py`, which basically sends integers to Kafka. Run it!
 
 - Run the following command, and you will see the logs in `log.txt`
 
