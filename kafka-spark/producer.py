@@ -83,15 +83,15 @@ def replay_data(producer):
 
 if __name__ == '__main__':
     producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
-                             value_serializer=lambda x:
-                             dumps(x).encode('utf-8'))
+                             key_serializer=lambda x: dumps(x).encode('utf-8'),
+                             value_serializer=lambda x: dumps(x).encode('utf-8'))
 
-    replay_data(producer)
+    # Uncomment this for Phasenet & GMMA API test
+    # replay_data(producer)
 
     # Uncomment this to test Kafka + Spark integration
-    # for e in range(10000):
-    #     print(e)
-    #     x = np.zeros(e)
-    #     data = e
-    #     producer.send('testtopic', value=data)
-    #     sleep(0.5)
+    for ts in range(10000):
+        print(ts)
+        for sid in range(16):
+            producer.send('testtopic', key=f'station_{sid}', value=(ts, np.repeat(ts * 100 + sid, 2).tolist()))
+        sleep(1)

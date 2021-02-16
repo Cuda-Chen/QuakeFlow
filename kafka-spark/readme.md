@@ -55,14 +55,14 @@ The consumer will read the messages from the Kafka cluster.
 
 7. Run the `test_spark.py` script for testing the Spark features
 
-- Install Spark and setup the env for Spark https://spark.apache.org/downloads.html. I was using `spark-2.3.3-bin-hadoop2.7`, but I think you should choose `2.4.7` and it should work too 
+- `spark-submit` is pre-installed in our environment
 
 - Uncomment some lines in `producer.py`, which basically sends integers to Kafka. Run it!
 
 - Run the following command, and you will see the logs in `log.txt`
 
 ```
-$ SPARK_HOME/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.3.3 test_spark.py > log.txt
+$ spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.3.3 test_spark.py > log.txt
 ```
 
 *Note: This will depends on the version of Spark you installed... If you installed the `2.4.7` ver, might need to change some version numbers in the command
