@@ -7,8 +7,10 @@ from pyspark.streaming.kafka import KafkaUtils
 from pyspark.sql.functions import window
 import numpy as np
 
+PHASENET_API_URL = "http://localhost:8000"
+
 if __name__ == "__main__":
-    MIN_LENGTH = 30
+    NUMBER_OF_BATCHES = 30
     SAMPLING_RATE = 100
     sc = SparkContext(appName="PythonStreamingRecieverKafkaWordCount")
     ssc = StreamingContext(sc, 1)  # 1 second window
@@ -39,28 +41,30 @@ if __name__ == "__main__":
             "vec": vecs,
             "dt": 1.0 / SAMPLING_RATE
         }
-        # print(req)
+        print('##req', req)
         try:
-            resp = requests.get("http://localhost:8000/predict", json=req)
-            print('Phasenet resp', resp.json())
+            resp = requests.get(f'{PHASENET_API_URL}/predict2gmma', json=req)
+            print('Phasenet & GMMA resp', resp.json())
         except Exception as error:
-            print(error)
+            print('Phasenet & GMMA error', error)
 
     # [groupByKeyAndWindow]
     # - windowDuration: width of the window
     # - slideDuration: sliding interval of the window
 
     # -> groupby: (station_id, (timestamp, feat_vecs))
-    grouped_df = lines.groupByKeyAndWindow(windowDuration=31, slideDuration=1)
+    grouped_df = lines.groupByKeyAndWindow(windowDuration=NUMBER_OF_BATCHES + 1, slideDuration=3)
 
     # -> map: (station_id, [(ts_0, vec_0), (ts_1, vec_1), ...]), sort data by timestamp
-    df_feats = grouped_df.map(lambda x: (x[0], sorted(x[1], key=lambda y: y[0])))
+    df_feats = grouped_df.map(lambda x: (x[0][1:-1], sorted(x[1], key=lambda y: y[0])))
 
-    # -> filter: discard rows that has less than MIN_LENGTH data points
-    df_feats = df_feats.filter(lambda x: len(x[1]) >= MIN_LENGTH)
+    # -> filter: discard rows that has less than NUMBER_OF_BATCHES of data batches
+    df_feats = df_feats.filter(lambda x: len(x[1]) >= NUMBER_OF_BATCHES)
 
     # -> map: (station_id, [timestamps], [features (30, 100, 3)])
-    df_feats = df_feats.map(lambda x: (x[0], [y[0] for y in x[1][:MIN_LENGTH]], [y[1] for y in x[1][:MIN_LENGTH]]))
+    df_feats = df_feats.map(lambda x: (x[0],
+                                       [y[0] for y in x[1][:NUMBER_OF_BATCHES]],
+                                       [y[1] for y in x[1][:NUMBER_OF_BATCHES]]))
 
     # -> map: ([station_id], [[timestamps]], [[flatten_features (3000, 3)]])
     df_feats = df_feats.map(lambda x: ([x[0]], [x[1]], [[row for batch in x[2] for row in batch]]))

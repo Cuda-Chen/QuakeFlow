@@ -75,7 +75,7 @@ def replay_data(producer):
 
         # Send stream of station data to Kafka
         for i, station_id in enumerate(fakedata['station_id']):
-            producer.send('testtopic', key=f'station_{fakedata["station_id"][i]}',
+            producer.send('testtopic', key=fakedata["station_id"][i],
                           value=(ts, vecs[i].tolist()))
 
         # Sleep for 1 second to stimulate real stations
