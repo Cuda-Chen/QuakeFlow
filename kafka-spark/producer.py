@@ -38,47 +38,54 @@ def timestamp(x): return x.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
 def replay_data(producer):
     with open('fakedata.pkl', 'rb') as f:
         fakedata = pickle.load(f)
-
     # Load data configs
     data = fakedata['data']
     start_time = fakedata['start_time']
     sampling_rate = fakedata['sampling_rate']
     n_station = len(fakedata['station_id'])
 
+    print(sampling_rate)
+
     # Specify widow_size
-    window_size = 10000
+    # Each station produces 100 sample/per second in the realworld scenario
+    window_size = 100
 
     # Replay the data according to the window_size
     idx = 0
     while idx < len(data):
         # Current timestamp
         ts = timestamp(start_time + idx / sampling_rate)
+        print(idx, ts)
 
         # batch of data of window_size
         vecs = data[idx: idx + window_size].transpose([1, 0, 2])
-        req = {
-            'id': fakedata['station_id'],
-            'timestamp': [ts] * n_station,
-            "vec": vecs.tolist(),
-            "dt": 1.0 / sampling_rate
-        }
 
-        # This is the part where we send req to PhaseNet and GMMA API
-        # Comment out this part if you want to test Pyspark - Kafka integration
-        resp = requests.get("http://localhost:8000/predict", json=req)
-        visualize(vecs, fakedata['station_id'], [ts] * n_station, resp.json(), sampling_rate)
-        catalog = requests.get("http://localhost:8001/predict", json={"picks": resp.json()})
-        ####
-        print(catalog.json())
+        ########Send req to PhaseNet and GMMA API in bulk, for testing purpose##########
+        # req = {
+        #     'id': fakedata['station_id'],
+        #     'timestamp': [ts] * n_station,
+        #     "vec": vecs.tolist(),
+        #     "dt": 1.0 / sampling_rate
+        # }
+        # resp = requests.get("http://localhost:8000/predict", json=req)
+        # visualize(vecs, fakedata['station_id'], [ts] * n_station, resp.json(), sampling_rate)
+        # catalog = requests.get("http://localhost:8001/predict", json={"picks": resp.json()})
+        # print(catalog.json())
+        ################################################################################
+
+        # Send stream of station data to Kafka
+        for i, station_id in enumerate(fakedata['station_id']):
+            producer.send('testtopic', key=f'station_{fakedata["station_id"][i]}',
+                          value=(ts, vecs[i].tolist()))
+
+        # Sleep for 1 second to stimulate real stations
+        time.sleep(1)
+
+        # Next iteration
         idx += window_size
-        print(ts)
 
-        # Send some message to Kafka
-        producer.send('testtopic', value=req)
-        time.sleep(3)
-
-        if idx >= 3 * window_size:
-            raise
+        # if idx >= 3 * window_size:
+        #     raise
 
 
 if __name__ == '__main__':
@@ -86,12 +93,12 @@ if __name__ == '__main__':
                              key_serializer=lambda x: dumps(x).encode('utf-8'),
                              value_serializer=lambda x: dumps(x).encode('utf-8'))
 
-    # Uncomment this for Phasenet & GMMA API test
-    # replay_data(producer)
+    # Phasenet & GMMA API test
+    replay_data(producer)
 
-    # Uncomment this to test Kafka + Spark integration
-    for ts in range(10000):
-        print(ts)
-        for sid in range(16):
-            producer.send('testtopic', key=f'station_{sid}', value=(ts, np.repeat(ts * 100 + sid, 2).tolist()))
-        sleep(1)
+    # Uncomment this to test Kafka + Spark integration with dummy data
+    # for ts in range(10000):
+    #     print(ts)
+    #     for sid in range(16):
+    #         producer.send('testtopic', key=f'station_{sid}', value=(ts, np.repeat(ts * 100 + sid, 2).tolist()))
+    #     sleep(1)

@@ -2,8 +2,7 @@
 
 ## Setup
 
-1. Install Conda Env (the env file is located at the root directory)
-
+1. Install Conda Env 
 ```
 conda env create --name cs329s --file=env.yml
 ```
@@ -38,7 +37,7 @@ $ uvicorn app:app --reload --port 8000
 ```
 
 Open another terminal and run
-PhaseNet:
+GMMA:
 
 ```
 $ cd ./GMMA/gmma
@@ -64,14 +63,3 @@ The consumer will read the messages from the Kafka cluster.
 ```
 $ spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.3.3 test_spark.py > log.txt
 ```
-
-*Note: This will depends on the version of Spark you installed... If you installed the `2.4.7` ver, might need to change some version numbers in the command
-
-
-
-
-
-
-
-
-
