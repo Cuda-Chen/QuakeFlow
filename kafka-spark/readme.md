@@ -33,7 +33,7 @@ PhaseNet: https://github.com/wayneweiqiang/PhaseNet
 
 ```
 $ git clone -b quakeflow https://github.com/wayneweiqiang/PhaseNet
-$ cd ./PhaseNet/phasenet
+$ cd phasenet
 $ uvicorn app:app --reload --port 8000
 ```
 
@@ -43,7 +43,7 @@ GMMA: https://github.com/wayneweiqiang/GMMA
 
 ```
 $ git clone -b quakeflow https://github.com/wayneweiqiang/GMMA
-$ cd ./GMMA/gmma
+$ cd gmma
 $ uvicorn app:app --reload --port 8001
 ```
 
