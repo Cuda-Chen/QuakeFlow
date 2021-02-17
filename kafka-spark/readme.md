@@ -27,7 +27,8 @@ $ bin/kafka-topics.sh --create --topic testtopic --bootstrap-server localhost:90
 
 4. Setup PhaseNet and GMMA
 
-
+PhaseNet and GMMA are independent to this Quakeflow repo. You can clone and download 
+both of them in a different folder.
 
 PhaseNet: https://github.com/wayneweiqiang/PhaseNet
 
