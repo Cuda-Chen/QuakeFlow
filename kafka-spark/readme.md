@@ -27,39 +27,49 @@ $ bin/kafka-topics.sh --create --topic testtopic --bootstrap-server localhost:90
 
 4. Setup PhaseNet and GMMA
 
-Make sure you get the submodules first
 
-PhaseNet:
+
+PhaseNet: https://github.com/wayneweiqiang/PhaseNet
 
 ```
+$ git clone -b quakeflow https://github.com/wayneweiqiang/PhaseNet
 $ cd ./PhaseNet/phasenet
 $ uvicorn app:app --reload --port 8000
 ```
 
 Open another terminal and run
-GMMA:
+
+GMMA: https://github.com/wayneweiqiang/GMMA
 
 ```
+$ git clone -b quakeflow https://github.com/wayneweiqiang/GMMA
 $ cd ./GMMA/gmma
 $ uvicorn app:app --reload --port 8001
 ```
 
 5. Run the `producer.py` script
 
-You may want to comment and change the file a bit according to your needs.
+```
+$ python producer.py
+```
 
-6. Run the `consumer.py` script
+and you should see the script print out some timestamps every second
 
-The consumer will read the messages from the Kafka cluster.
 
-7. Run the `test_spark.py` script for testing the Spark features
+<!-- 6. Run the `consumer.py` script
+
+The consumer will read the messages from the Kafka cluster. -->
+
+6. Run the `spark.py` script for testing the Spark features
 
 - `spark-submit` is pre-installed in our environment
 
-- Uncomment some lines in `producer.py`, which basically sends integers to Kafka. Run it!
-
-- Run the following command, and you will see the logs in `log.txt`
+- Run the following command, and you will see the logs in `logs.txt`
 
 ```
-$ spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.3.3 test_spark.py > log.txt
+$ spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.3.3 spark.py > logs.txt
 ```
+
+7. Check the `GMMA` API service after 30 seconds, you should see [200 OK] and some outputs about the earthquakes
+
+<img src="https://i.imgur.com/qPEzICR.png">

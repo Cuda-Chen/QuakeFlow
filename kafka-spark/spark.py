@@ -34,7 +34,7 @@ if __name__ == "__main__":
         if not results:
             return
         station_ids, timestamps, vecs = results[0]
-
+        print('####', len(timestamps[0]))
         req = {
             'id': station_ids,
             'timestamp': timestamps[0],  # workaround
