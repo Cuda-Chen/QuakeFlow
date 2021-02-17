@@ -74,3 +74,11 @@ $ spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.3.3 
 7. Check the `GMMA` API service after 30 seconds, you should see [200 OK] and some outputs about the earthquakes
 
 <img src="https://i.imgur.com/qPEzICR.png">
+
+Go to the Spark UI portal (http://localhost:4040/) and you can see the jobs, stages and streaming statistics. 
+
+<img src="https://i.imgur.com/Q7ndx2R.png">
+
+Also some cool DAG Visualization about how the streaming ETL pipeline is done
+
+<img src="https://i.imgur.com/TR1dUHA.png" height="900px">
