@@ -10,11 +10,12 @@ import numpy as np
 PHASENET_API_URL = "http://localhost:8000"
 
 if __name__ == "__main__":
-    NUMBER_OF_BATCHES = 30
+    WINDOW_DURATION = 30
+    NUMBER_OF_BATCHES = 60
     SAMPLING_RATE = 100
     sc = SparkContext(appName="PythonStreamingRecieverKafkaWordCount")
-    ssc = StreamingContext(sc, 1)  # 1 second window
-    broker, topic = 'localhost:2181', 'testtopic'
+    ssc = StreamingContext(sc, 0.5)  # 1 second window
+    broker, topic = 'localhost:2181', 'waveform_raw'
     kvs = KafkaUtils.createStream(ssc,
                                   broker, "spark-streaming-consumer",
                                   {topic: 1})
@@ -49,11 +50,11 @@ if __name__ == "__main__":
             print('Phasenet & GMMA error', error)
 
     # [groupByKeyAndWindow]
-    # - windowDuration: width of the window
+    # - windowDuration: width of the window, number of seconds
     # - slideDuration: sliding interval of the window
 
     # -> groupby: (station_id, (timestamp, feat_vecs))
-    grouped_df = lines.groupByKeyAndWindow(windowDuration=NUMBER_OF_BATCHES + 1, slideDuration=3)
+    grouped_df = lines.groupByKeyAndWindow(windowDuration=WINDOW_DURATION+1, slideDuration=3)
 
     # -> map: (station_id, [(ts_0, vec_0), (ts_1, vec_1), ...]), sort data by timestamp
     df_feats = grouped_df.map(lambda x: (x[0][1:-1], sorted(x[1], key=lambda y: y[0])))

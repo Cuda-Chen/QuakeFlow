@@ -82,3 +82,5 @@ Go to the Spark UI portal (http://localhost:4040/) and you can see the jobs, sta
 Also some cool DAG Visualization about how the streaming ETL pipeline is done
 
 <img src="https://i.imgur.com/TR1dUHA.png" height="900px">
+
+<!-- https://stackoverflow.com/questions/40384458/spark-streaming-processing-time-vs-total-delay-vs-processing-delay -->

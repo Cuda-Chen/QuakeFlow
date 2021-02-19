@@ -48,7 +48,7 @@ def replay_data(producer):
 
     # Specify widow_size
     # Each station produces 100 sample/per second in the realworld scenario
-    window_size = 100
+    window_size = 50
 
     # Replay the data according to the window_size
     idx = 0
@@ -75,11 +75,11 @@ def replay_data(producer):
 
         # Send stream of station data to Kafka
         for i, station_id in enumerate(fakedata['station_id']):
-            producer.send('testtopic', key=fakedata["station_id"][i],
+            producer.send('waveform_raw', key=fakedata["station_id"][i],
                           value=(ts, vecs[i].tolist()))
 
         # Sleep for 1 second to stimulate real stations
-        time.sleep(1)
+        time.sleep(0.5)
 
         # Next iteration
         idx += window_size
