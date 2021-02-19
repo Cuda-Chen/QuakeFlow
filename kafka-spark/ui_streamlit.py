@@ -20,11 +20,58 @@ consumer = KafkaConsumer(
 normalize = lambda x: (x - np.mean(x) + np.finfo(x.dtype).eps)/(np.std(x)+np.finfo(x.dtype).eps)
 
 wave_dict = defaultdict(list)
+window_length = 100
 window_size = 50
+hop_length = 5
+num_station = 16
 dt = 0.01
-prev_time = time.time()
+
+## 
+# prev_time = time.time()
+# num_plot = 0
+# for i, message in enumerate(consumer):
+    
+#     key = message.key
+#     timestamp = message.value[0]
+#     vec = message.value[1]
+#     t = datetime.fromisoformat(timestamp).timestamp() + np.arange(len(vec))*dt
+
+#     wave_dict[key].append((t, vec))
+#     wave_dict[key] = wave_dict[key][-window_size:]
+
+#     if time.time() - prev_time > 5 :
+#         prev_time = time.time()
+
+#         keys = sorted(wave_dict.keys())
+#         plot_data = {}
+#         for i, k in enumerate(keys):
+#             plot_data[k] = []
+#             for j in range(window_size - len(wave_dict[k])):
+#                 plot_data[k].extend([[0] * 3] * 100)
+#             for v in wave_dict[k]:
+#                 plot_data[k].extend(v[1])
+#             plot_data[k] = normalize(np.array(plot_data[k])[::hop_length,-1])/8 + i
+
+#         if num_plot == 0:
+#             handle = st.line_chart(plot_data)
+#         else:
+#             handle.line_chart(plot_data)
+#         num_plot += 1
+
+
+### based on matplotlib
+fig, ax = plt.subplots()
+x = np.arange(window_length*window_size/hop_length) * dt
+ax.set_ylim(-1, num_station)
+ax.set_xlim(x[0], x[-1])
+lines = []
+for i in range(num_station):
+    line, = ax.plot(x, np.zeros(len(x)) + i, linewidth=0.5)
+    lines.append(line)
+the_plot = st.pyplot(plt)
 
 num_plot = 0
+prev_time = time.time()
 for i, message in enumerate(consumer):
     
     key = message.key
@@ -35,7 +82,7 @@ for i, message in enumerate(consumer):
     wave_dict[key].append((t, vec))
     wave_dict[key] = wave_dict[key][-window_size:]
 
-    if time.time() - prev_time > 1.1:
+    if time.time() - prev_time > 1.1 :
         prev_time = time.time()
 
         keys = sorted(wave_dict.keys())
@@ -46,10 +93,7 @@ for i, message in enumerate(consumer):
                 plot_data[k].extend([[0] * 3] * 100)
             for v in wave_dict[k]:
                 plot_data[k].extend(v[1])
-            plot_data[k] = normalize(np.array(plot_data[k])[::5,-1])/8 + i
+            lines[i].set_ydata(normalize(np.array(plot_data[k])[::hop_length,-1])/8 + i)
 
-        if num_plot == 0:
-            handle = st.line_chart(plot_data)
-        else:
-            handle.line_chart(plot_data)
+        the_plot.pyplot(plt)
         num_plot += 1
