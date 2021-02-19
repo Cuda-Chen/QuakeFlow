@@ -68,9 +68,8 @@ lines = []
 for i in range(num_station):
     line, = ax.plot(x, np.zeros(len(x)) + i, linewidth=0.5)
     lines.append(line)
-the_plot = st.pyplot(plt)
+ui_plot = st.pyplot(plt)
 
-num_plot = 0
 prev_time = time.time()
 for i, message in enumerate(consumer):
     
@@ -82,18 +81,19 @@ for i, message in enumerate(consumer):
     wave_dict[key].append((t, vec))
     wave_dict[key] = wave_dict[key][-window_size:]
 
-    if time.time() - prev_time > 1.1 :
+    if time.time() - prev_time > 2 :
         prev_time = time.time()
 
         keys = sorted(wave_dict.keys())
-        plot_data = {}
         for i, k in enumerate(keys):
-            plot_data[k] = []
+            tmp = []
+            if len(wave_dict[k]) < window_size:
+                print(len(wave_dict[k]))
             for j in range(window_size - len(wave_dict[k])):
-                plot_data[k].extend([[0] * 3] * 100)
+                tmp.extend([[0] * 3] * 100)
             for v in wave_dict[k]:
-                plot_data[k].extend(v[1])
-            lines[i].set_ydata(normalize(np.array(plot_data[k])[::hop_length,-1])/8 + i)
+                tmp.extend(v[1])
+            lines[i].set_ydata(normalize(np.array(tmp)[::hop_length,-1])/8 + i)
+        
+        ui_plot.pyplot(plt)
 
-        the_plot.pyplot(plt)
-        num_plot += 1
