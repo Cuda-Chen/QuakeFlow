@@ -22,7 +22,7 @@ $ bin/kafka-server-start.sh config/server.properties
 3. Create a topic `testtopic` (just for test purpose)
 
 ```
-$ bin/kafka-topics.sh --create --topic testtopic --bootstrap-server localhost:9092
+$ bin/kafka-topics.sh --create --topic waveform_raw --bootstrap-server localhost:9092
 ```
 
 4. Setup PhaseNet and GMMA
