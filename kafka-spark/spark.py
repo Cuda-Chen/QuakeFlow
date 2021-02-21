@@ -11,10 +11,10 @@ PHASENET_API_URL = "http://localhost:8000"
 
 if __name__ == "__main__":
     WINDOW_DURATION = 30
-    NUMBER_OF_BATCHES = 60
+    NUMBER_OF_BATCHES = 30
     SAMPLING_RATE = 100
     sc = SparkContext(appName="PythonStreamingRecieverKafkaWordCount")
-    ssc = StreamingContext(sc, 0.5)  # 1 second window
+    ssc = StreamingContext(sc, 1)  # 1 second window
     broker, topic = 'localhost:2181', 'waveform_raw'
     kvs = KafkaUtils.createStream(ssc,
                                   broker, "spark-streaming-consumer",
@@ -36,13 +36,15 @@ if __name__ == "__main__":
             return
         station_ids, timestamps, vecs = results[0]
         print('####', len(timestamps[0]))
+        print('####', station_ids)
+        # print('####', [x[0] for x in timestamps])
         req = {
             'id': station_ids,
-            'timestamp': timestamps[0],  # workaround
+            'timestamp': [x[0] for x in timestamps],  # workaround
             "vec": vecs,
             "dt": 1.0 / SAMPLING_RATE
         }
-        print('##req', req)
+#        print('##req', req)
         try:
             resp = requests.get(f'{PHASENET_API_URL}/predict2gmma', json=req)
             print('Phasenet & GMMA resp', resp.json())

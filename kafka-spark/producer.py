@@ -48,7 +48,7 @@ def replay_data(producer):
 
     # Specify widow_size
     # Each station produces 100 sample/per second in the realworld scenario
-    window_size = 50
+    window_size = 100
 
     # Replay the data according to the window_size
     idx = 0
@@ -79,7 +79,7 @@ def replay_data(producer):
                           value=(ts, vecs[i].tolist()))
 
         # Sleep for 1 second to stimulate real stations
-        time.sleep(0.5)
+        time.sleep(1.0)
 
         # Next iteration
         idx += window_size
