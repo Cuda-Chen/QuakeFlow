@@ -86,6 +86,8 @@ ax1.legend(loc="upper left")
 ax1.title.set_text("Streaming Seismic Waveforms and Detected P/S Phases")
 
 ax2.axis("scaled")
+ax2.set_xlabel("x(km)")
+ax2.set_ylabel("y(km)")
 ax2.set_ylim([50, 80])
 ax2.set_xlim([30, 60])
 scatter_events = ax2.scatter([-1], [-1], s=120,  c="r", marker="*", label="Earthquakes")
@@ -230,7 +232,7 @@ for i, message in enumerate(consumer):
                 red = np.zeros([len(alpha),3])
                 red[:,0] = 1.0
                 rgba = np.hstack([red, alpha[:,np.newaxis]])
-                scatter_events.set_color(rgba)
+                scatter_events.set_color(np.clip(rgba, 0, 1))
 
         if len(keys) > 0:
             print("plotting...")
