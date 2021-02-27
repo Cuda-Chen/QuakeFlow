@@ -1,5 +1,7 @@
 # Kafka & Pyspark 
 
+This folder will be deprecated as we split things into individual docker containers.
+
 ## Setup
 
 1. Install Conda Env 
