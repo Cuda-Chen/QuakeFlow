@@ -6,6 +6,7 @@ import time
 import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 consumer = KafkaConsumer(
     bootstrap_servers=['localhost:9092'],
@@ -18,6 +19,7 @@ consumer = KafkaConsumer(
 consumer.subscribe(['waveform_raw', 'phasenet_picks', 'gmma_events'])
 # consumer.subscribe(['waveform_raw', 'phasenet_picks'])
 # consumer.subscribe(['waveform_raw'])
+# consumer.subscribe(['phasenet_picks'])
 
 normalize = lambda x: (x - np.mean(x) + np.finfo(x.dtype).eps)/(np.std(x)+np.finfo(x.dtype).eps)
 timestamp_seconds = lambda x: datetime.fromisoformat(x).timestamp()
@@ -96,6 +98,42 @@ ax2.title.set_text("Associated Earthquakes")
 
 ui_plot = st.pyplot(plt)
 
+cities = []
+scale = 5000
+fig_temp = go.Figure()
+fake_data_lon = [-112, -120]
+fake_data_lat = [27, 36]
+fake_sizes = [1, 0.9, 1.2, 0.5]
+
+fig_temp.add_trace(go.Scattergeo(
+    locationmode = 'USA-states',
+    lon = fake_data_lon,
+    lat = fake_data_lat,
+    text = "test 1",
+    marker = dict(
+        size = 50,
+        color = 'royalblue',
+        line_color='rgb(40,40,40)',
+        line_width=0.5,
+        sizemode = 'area'
+    )
+))
+
+fig_temp.update_layout(
+        title_text = 'test',
+        showlegend = True,
+        geo = dict(
+            landcolor = 'rgb(217, 217, 217)',
+        )
+    )
+
+fig_temp.update_geos(fitbounds="locations")
+
+
+map_figure = st.plotly_chart(fig_temp)
+
+
+
 # plt.show()
 
 # prev_time = time.time()
@@ -169,6 +207,26 @@ def get_plot_events(message, t0, tn):
                 return t_events, mag_events, loc_events, t0_idx 
     return t_events, mag_events, loc_events, t0_idx 
 
+def lng_from_x(x):
+    lng = (1/111.1666666667) * x - 116.0304497751
+    return lng
+
+def lat_from_y(y):
+    lat = (1/111.1537242472) * y + 32.4800184066
+    return lat
+
+def xy_list_to_latlng_list(x_list, y_list):
+    lng_list = [lng_from_x(x) for x in x_list]
+    lat_list = [lat_from_y(y) for y in y_list]
+    return lng_list, lat_list
+
+def loc_events_organize(loc_events):
+    x_list = [event[0] for event in loc_events]
+    y_list = [event[1] for event in loc_events]
+    z_list = [event[2] for event in loc_events]
+    lng_list, lat_list = xy_list_to_latlng_list(x_list, y_list)
+    return lng_list, lat_list, z_list
+
 for i, message in enumerate(consumer):
 
     if message.topic == "waveform_raw":
@@ -179,11 +237,13 @@ for i, message in enumerate(consumer):
         wave_dict[key] = wave_dict[key][-window_number:]
     
     elif message.topic == "phasenet_picks":
+        # print("phasenet!")
         key = message.key
         pick = message.value
         pick_dict[key].append(pick)
 
     elif message.topic == "gmma_events":
+        # print("gmma!")
         event = message.value
         event_list.extend(event)
     else:
@@ -197,6 +257,7 @@ for i, message in enumerate(consumer):
         
         min_t = prev_time
         max_t = 0
+        #print("len(pick_dict): ", len(pick_dict))
         for j, k in enumerate(keys):
             tmp_vec = []
             tmp_t = []
@@ -207,7 +268,6 @@ for i, message in enumerate(consumer):
                 tmp_t.append(v[0])
 
             lines[j].set_ydata(normalize(np.array(tmp_vec)[::hop_length,-1])/5 + j)
-
             if k in pick_dict:
 
                 t0 = timestamp_seconds(max(tmp_t)) - window_length * (window_number-1) * dt
@@ -222,9 +282,13 @@ for i, message in enumerate(consumer):
                 # scatters[j].set_edgecolors(colors)
                 # scatters[j].set_facecolors(colors)
                 scatters[j].set_color(colors)
-
+        #print("len(event_list): ", len(event_list))
         if len(event_list) > 0:
             t_events, mag_events, loc_events, t0_idx = get_plot_events(event_list, min_t, max_t)
+            #print("loc_events: ", loc_events)
+            #print("mag_events: ", mag_events)
+            #print("t_events: ", t_events)
+            #print("t0_idx: ", t0_idx)
             if len(t_events) > 0:
                 loc_events = np.array(loc_events)
                 scatter_events.set_offsets(loc_events[:,:2])
@@ -234,9 +298,47 @@ for i, message in enumerate(consumer):
                 rgba = np.hstack([red, alpha[:,np.newaxis]])
                 scatter_events.set_color(np.clip(rgba, 0, 1))
 
+                #insert plotly code here
+                #reset plot (there seems to be no way to keep track of traces one by one so this will have to do)
+                fig_temp.data = []
+                # organize data into the correct form
+                lng_list, lat_list, z_list = loc_events_organize(loc_events)
+                fig_temp.add_trace(go.Scattergeo(
+                    locationmode = 'USA-states',
+                    lon = lng_list,
+                    lat = lat_list,
+                    text = "test 1",
+                    marker = dict(
+                        size = 50,
+                        color = 'royalblue',
+                        line_color='rgb(40,40,40)',
+                        line_width=0.5,
+                        sizemode = 'area'
+                    )
+                ))
+                fig_temp.update_layout(
+                        title_text = 'test',
+                        showlegend = True,
+                        geo = dict(
+                            landcolor = 'rgb(217, 217, 217)',
+                        )
+                    )
+                fig_temp.update_geos(fitbounds="locations")
+                fig_temp.update_geos(
+                    resolution=50,
+                    showcoastlines=True, coastlinecolor="RebeccaPurple",
+                    showland=True, landcolor="LightGreen",
+                    showocean=True, oceancolor="LightBlue",
+                    showlakes=True, lakecolor="Blue",
+                    showrivers=True, rivercolor="Blue"
+                )
+
+
         if len(keys) > 0:
             print("plotting...")
             ui_plot.pyplot(plt)
+            # insert plotly code here
+            map_figure.plotly_chart(fig_temp)
 
     if message.topic == "waveform_raw":
         time.sleep(refresh_sec/num_sta/20)
