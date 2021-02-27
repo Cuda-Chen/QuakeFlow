@@ -8,7 +8,7 @@ Build the docker image
 docker build --tag quakeflow-spark:1.0 .
 ```
 
-Run the Waveform Generator
+Run the Spark ETL Pipeline
 
 ```
 docker run -it quakeflow-spark:1.0
