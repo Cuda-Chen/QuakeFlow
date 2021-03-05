@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phasenet-api
+  labels:
+    app: phasenet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phasenet
+  template:
+    metadata:
+      labels:
+        app: phasenet
+    spec:
+      containers:
+      - name: phasenet
+        image: phasenet-api:1.0
+        ports:
+        - containerPort: 8000
+        imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gmma-api
+  labels:
+    app: gmma
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gmma
+  template:
+    metadata:
+      labels:
+        app: gmma
+    spec:
+      containers:
+      - name: gmma
+        image: gmma-api:1.0
+        ports:
+        - containerPort: 8001
+        imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quakeflow-spark
+  labels:
+    app: spark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark
+  template:
+    metadata:
+      labels:
+        app: spark
+    spec:
+      containers:
+      - name: spark
+        image: quakeflow-spark:1.0
+        imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quakeflow-waveform
+  labels:
+    app: waveform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: waveform
+  template:
+    metadata:
+      labels:
+        app: waveform
+    spec:
+      containers:
+      - name: waveform
+        image: quakeflow-waveform:1.0
+        imagePullPolicy: Never
