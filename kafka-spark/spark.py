@@ -92,16 +92,16 @@ if __name__ == "__main__":
     df_reduced.foreachRDD(run_phasenet_predict)
     
 
-    # Ugly as hell, but it works now
-    grouped_large_df = lines.groupByKeyAndWindow(windowDuration=61, slideDuration=3)
-    df_large_feats = grouped_large_df.map(lambda x: (x[0][1:-1], sorted(x[1], key=lambda y: y[0])))
-    df_large_feats = df_large_feats.filter(lambda x: len(x[1]) >= 60)
-    df_large_feats = df_large_feats.map(lambda x: (x[0],
-                                       [y[0] for y in x[1][:60]],
-                                       [y[1] for y in x[1][:60]]))
-    df_large_feats = df_large_feats.map(lambda x: ([x[0]], [x[1]], [[row for batch in x[2] for row in batch]]))
-    df_large_feats = df_large_feats.reduce(lambda a, b: (a[0] + b[0], a[1] + b[1], a[2] + b[2]))
-    df_large_feats.foreachRDD(send_waveform_grouped)
+    # Ugly as hell, but it works now (comment out for now, buggy)
+    # grouped_large_df = lines.groupByKeyAndWindow(windowDuration=61, slideDuration=3)
+    # df_large_feats = grouped_large_df.map(lambda x: (x[0][1:-1], sorted(x[1], key=lambda y: y[0])))
+    # df_large_feats = df_large_feats.filter(lambda x: len(x[1]) >= 60)
+    # df_large_feats = df_large_feats.map(lambda x: (x[0],
+    #                                    [y[0] for y in x[1][:60]],
+    #                                    [y[1] for y in x[1][:60]]))
+    # df_large_feats = df_large_feats.map(lambda x: ([x[0]], [x[1]], [[row for batch in x[2] for row in batch]]))
+    # df_large_feats = df_large_feats.reduce(lambda a, b: (a[0] + b[0], a[1] + b[1], a[2] + b[2]))
+    # df_large_feats.foreachRDD(send_waveform_grouped)
 
     # df_reduced.pprint()
 
