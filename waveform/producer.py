@@ -55,7 +55,8 @@ def replay_data(producer):
         # Current timestamp
         delta = datetime.timedelta(seconds=idx / sampling_rate)
         ts = timestamp(start_time + delta)
-        logging.warning((idx, ts))
+        # logging.warning((idx, ts))
+        print((idx, ts))
 
         # batch of data of window_size
         vecs = data[idx: idx + window_size].transpose([1, 0, 2])
@@ -87,21 +88,24 @@ def replay_data(producer):
         # if idx >= 3 * window_size:
         #     raise
 
-if __name__ == '__main__':
-    logging.warning('Connecting to Kafka cluster for producer...')
 
-    #TODO Will need to clean up this with better env config
+if __name__ == '__main__':
+    # logging.warning('Connecting to Kafka cluster for producer...')
+    print('Connecting to Kafka cluster for producer...')
+
+    # TODO Will need to clean up this with better env config
     try:
-        BROKER_URL = 'my-kafka-headless:9092'  
+        BROKER_URL = 'my-kafka-headless:9092'
         producer = KafkaProducer(bootstrap_servers=[BROKER_URL],
-                                key_serializer=lambda x: dumps(x).encode('utf-8'),
-                                value_serializer=lambda x: dumps(x).encode('utf-8'))
+                                 key_serializer=lambda x: dumps(x).encode('utf-8'),
+                                 value_serializer=lambda x: dumps(x).encode('utf-8'))
     except Exception as error:
-        BROKER_URL = 'localhost:9092'  
+        print('k8s kafka not found')
+        BROKER_URL = 'localhost:9092'
         producer = KafkaProducer(bootstrap_servers=[BROKER_URL],
-                                key_serializer=lambda x: dumps(x).encode('utf-8'),
-                                value_serializer=lambda x: dumps(x).encode('utf-8'))
-        
+                                 key_serializer=lambda x: dumps(x).encode('utf-8'),
+                                 value_serializer=lambda x: dumps(x).encode('utf-8'))
+
     logging.warning('Starting producer...')
     # Phasenet & GMMA API test
     replay_data(producer)

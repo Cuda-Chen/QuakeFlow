@@ -64,6 +64,14 @@ spec:
       - name: spark
         image: quakeflow-spark:1.0
         imagePullPolicy: Never
+        volumeMounts:
+        - name: tz-config
+          mountPath: /etc/localtime
+      volumes:
+        - name: tz-config
+          hostPath:
+            path: /usr/share/zoneinfo/US/Pacific
+            type: File
 ---
 apiVersion: apps/v1
 kind: Deployment

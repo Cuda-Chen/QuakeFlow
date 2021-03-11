@@ -2,6 +2,8 @@ FROM continuumio/miniconda3
 
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
+
 # Create the environment:
 COPY env.yml /app
 RUN conda env create --name cs329s --file=env.yml

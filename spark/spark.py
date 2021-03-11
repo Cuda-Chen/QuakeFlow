@@ -15,12 +15,16 @@ if __name__ == "__main__":
     WINDOW_DURATION = 30
     NUMBER_OF_BATCHES = 30
     SAMPLING_RATE = 100
+
     sc = SparkContext(appName="PythonStreamingRecieverKafkaWordCount")
+
     ssc = StreamingContext(sc, 1)  # 1 second window
-    broker, topic = 'localhost:2181', 'waveform_raw'
+    BROKER_URL = 'localhost:2181'
+    # BROKER_URL = 'my-kafka-zookeeper-headless:2181'
+    TOPIC = 'waveform_raw'
     kvs = KafkaUtils.createStream(ssc,
-                                  broker, "spark-streaming-consumer",
-                                  {topic: 1})
+                                  BROKER_URL, "spark-streaming-consumer",
+                                  {TOPIC: 1})
     # lines = kvs.map(lambda x: (json.loads(x[1])['key'], json.loads(x[1])['data']))
     lines = kvs.map(lambda x: tuple(
         (
@@ -35,6 +39,7 @@ if __name__ == "__main__":
         results = rdd.collect()
         # Corner case: empty RDD
         if not results:
+            print('########################################################Empty')
             return
         station_ids, timestamps, vecs = results[0]
         req = {
@@ -55,21 +60,20 @@ if __name__ == "__main__":
         # but this is due to Spark's constraint, unless we want to broadcast
         # producer to all nodes which I'm not sure how to do it
         producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
-                            key_serializer=lambda x: json.dumps(x).encode('utf-8'),
-                            value_serializer=lambda x: json.dumps(x).encode('utf-8'))
+                                 key_serializer=lambda x: json.dumps(x).encode('utf-8'),
+                                 value_serializer=lambda x: json.dumps(x).encode('utf-8'))
         results = rdd.collect()
         if not results:
             return
         print('##large group##', results)
-        producer.send('waveform_grouped',  value=results)
-        
+        producer.send('waveform_grouped', value=results)
 
     # [groupByKeyAndWindow]
     # - windowDuration: width of the window, number of seconds
     # - slideDuration: sliding interval of the window
 
     # -> groupby: (station_id, (timestamp, feat_vecs))
-    grouped_df = lines.groupByKeyAndWindow(windowDuration=WINDOW_DURATION+1, slideDuration=3)
+    grouped_df = lines.groupByKeyAndWindow(windowDuration=WINDOW_DURATION + 1, slideDuration=1)
 
     # -> map: (station_id, [(ts_0, vec_0), (ts_1, vec_1), ...]), sort data by timestamp
     df_feats = grouped_df.map(lambda x: (x[0][1:-1], sorted(x[1], key=lambda y: y[0])))
@@ -90,7 +94,11 @@ if __name__ == "__main__":
 
     # run_phasenet_predict
     df_reduced.foreachRDD(run_phasenet_predict)
-    
+
+    # def dosomething(x):
+    #     content = x.collect()
+    #     print('########', x.collect())
+    # df_reduced.foreachRDD(dosomething)
 
     # Ugly as hell, but it works now (comment out for now)
     # grouped_large_df = lines.groupByKeyAndWindow(windowDuration=61, slideDuration=3)
