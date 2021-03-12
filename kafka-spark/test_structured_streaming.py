@@ -1,99 +1,105 @@
-import streamlit as st
-from collections import defaultdict
+#!/usr/bin/env python
+# coding: utf-8
+
+# ## Test Structured Streaming
+# 
+# https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html
+# 
+# https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html
+
+# ### 1. check can get waveforms from kafka
+
+# In[1]:
+
+
 from kafka import KafkaConsumer
 from json import loads
-import time
-import numpy as np
-from datetime import datetime
-import matplotlib.pyplot as plt
 
 consumer = KafkaConsumer(
-    'testtopic',
-    bootstrap_servers=['localhost:9092'],
+    bootstrap_servers=['my-cluster-kafka-bootstrap:9092'],
     auto_offset_reset='earliest',
     enable_auto_commit=True,
-    group_id='my-group',
     key_deserializer=lambda x: loads(x.decode('utf-8')),
     value_deserializer=lambda x: loads(x.decode('utf-8'))
 )
 
-normalize = lambda x: (x - np.mean(x) + np.finfo(x.dtype).eps)/(np.std(x)+np.finfo(x.dtype).eps)
-
-wave_dict = defaultdict(list)
-window_length = 100
-window_size = 50
-hop_length = 5
-num_station = 16
-dt = 0.01
-
-## 
-# prev_time = time.time()
-# num_plot = 0
-# for i, message in enumerate(consumer):
-    
-#     key = message.key
-#     timestamp = message.value[0]
-#     vec = message.value[1]
-#     t = datetime.fromisoformat(timestamp).timestamp() + np.arange(len(vec))*dt
-
-#     wave_dict[key].append((t, vec))
-#     wave_dict[key] = wave_dict[key][-window_size:]
-
-#     if time.time() - prev_time > 5 :
-#         prev_time = time.time()
-
-#         keys = sorted(wave_dict.keys())
-#         plot_data = {}
-#         for i, k in enumerate(keys):
-#             plot_data[k] = []
-#             for j in range(window_size - len(wave_dict[k])):
-#                 plot_data[k].extend([[0] * 3] * 100)
-#             for v in wave_dict[k]:
-#                 plot_data[k].extend(v[1])
-#             plot_data[k] = normalize(np.array(plot_data[k])[::hop_length,-1])/8 + i
-
-#         if num_plot == 0:
-#             handle = st.line_chart(plot_data)
-#         else:
-#             handle.line_chart(plot_data)
-#         num_plot += 1
+consumer.subscribe(['waveform-raw', 'phasenet_picks', 'gmma_events'])
 
 
-### based on matplotlib
-fig, ax = plt.subplots()
-x = np.arange(window_length*window_size/hop_length) * dt
-ax.set_ylim(-1, num_station)
-ax.set_xlim(x[0], x[-1])
-lines = []
-for i in range(num_station):
-    line, = ax.plot(x, np.zeros(len(x)) + i, linewidth=0.5)
-    lines.append(line)
-the_plot = st.pyplot(plt)
+# In[2]:
 
-num_plot = 0
-prev_time = time.time()
-for i, message in enumerate(consumer):
-    
-    key = message.key
-    timestamp = message.value[0]
-    vec = message.value[1]
-    t = datetime.fromisoformat(timestamp).timestamp() + np.arange(len(vec))*dt
 
-    wave_dict[key].append((t, vec))
-    wave_dict[key] = wave_dict[key][-window_size:]
+for message in consumer:
+    print(message)
+    break
 
-    if time.time() - prev_time > 1.1 :
-        prev_time = time.time()
 
-        keys = sorted(wave_dict.keys())
-        plot_data = {}
-        for i, k in enumerate(keys):
-            plot_data[k] = []
-            for j in range(window_size - len(wave_dict[k])):
-                plot_data[k].extend([[0] * 3] * 100)
-            for v in wave_dict[k]:
-                plot_data[k].extend(v[1])
-            lines[i].set_ydata(normalize(np.array(plot_data[k])[::hop_length,-1])/8 + i)
+# ### 2. Structured Streaming
 
-        the_plot.pyplot(plt)
-        num_plot += 1
+# In[3]:
+
+
+import os
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1 pyspark-shell'
+
+
+# In[4]:
+
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import explode
+from pyspark.sql.functions import split
+
+spark = SparkSession.builder.appName("spark").getOrCreate()
+
+
+# In[5]:
+
+
+df = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "my-cluster-kafka-bootstrap:9092").option("subscribe", "waveform-raw").load()
+df = df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)", "timestamp")
+
+
+# In[11]:
+
+
+data = df.writeStream.queryName("waveform1").format("memory").start()
+
+
+# In[12]:
+
+
+data_ = spark.sql("select * from waveform1")
+data_.show()
+data_.printSchema()
+
+# from pyspark.sql.functions import window
+# import pyspark.sql.functions as F
+# windowedCounts = data_.groupBy(
+#     window(data_.timestamp, "10 seconds", "3 seconds"),
+#     data_.key
+# )
+# df_new = windowedCounts.agg(F.collect_list('value'))
+
+# df_new.awaitTermination() 
+
+# In[13]:
+
+
+rdd = data_.rdd.map(lambda x: (x["value"]))
+rdd.collect()
+
+
+# In[14]:
+
+
+df.timestamp
+
+
+# In[22]:
+
+
+query = df.writeStream.outputMode("update").format("console").trigger(continuous='1 second').start()
+
+query.awaitTermination()
+
