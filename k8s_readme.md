@@ -28,7 +28,7 @@ helm status my-kafka
 eval $(minikube docker-env)     
 ```
 
-1.1. Fix metrics-server for auto-scalling
+1.1. Fix metrics-server for auto-scalling (Only for docker)
 https://stackoverflow.com/questions/54106725/docker-kubernetes-mac-autoscaler-unable-to-find-metrics
 
 ```
