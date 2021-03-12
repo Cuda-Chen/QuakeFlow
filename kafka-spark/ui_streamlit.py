@@ -23,15 +23,19 @@ consumer.subscribe(['waveform_raw', 'phasenet_picks', 'gmma_events'])
 
 normalize = lambda x: (x - np.mean(x) + np.finfo(x.dtype).eps)/(np.std(x)+np.finfo(x.dtype).eps)
 timestamp_seconds = lambda x: datetime.fromisoformat(x).timestamp()
+# plot_scale_mag = lambda x, s1, s2: (x - 1) * (s2-s1) + 1
 wave_dict = defaultdict(list)
 pick_dict = defaultdict(list)
-event_list = []
+# event_list = []
+event_dict = defaultdict(dict)
+event_min_gap = 5
 window_length = 100
 window_number = 60
 hop_length = 10
 num_sta = 16
 refresh_sec = 1.0
 dt = 0.01
+
 
 ## 
 # prev_time = time.time()
@@ -92,7 +96,7 @@ ax2.set_xlabel("x(km)")
 ax2.set_ylabel("y(km)")
 ax2.set_ylim([50, 80])
 ax2.set_xlim([30, 60])
-scatter_events = ax2.scatter([-1], [-1], s=120,  c="r", marker="*", label="Earthquakes")
+scatter_events = ax2.scatter([-1], [-1], s=120,  c="r", marker="o", label="Earthquakes")
 ax2.legend(loc="upper left")
 ax2.title.set_text("Associated Earthquakes")
 
@@ -167,10 +171,10 @@ def get_plot_events(message, t0, tn):
     t_events = []
     mag_events = []
     loc_events = []
-    for i, x in enumerate(message):
+    for k, x in message.items():
         if timestamp_seconds(x["time"]) >= t0:
-            if t0_idx == 0:
-                t0_idx = i
+            # if t0_idx == 0:
+            #     t0_idx = i
             if timestamp_seconds(x["time"]) <= tn - 8 :
                 t_events.append(timestamp_seconds(x["time"]) - t0)
                 mag_events.append(x["magnitude"])
@@ -216,8 +220,11 @@ for i, message in enumerate(consumer):
 
     elif message.topic == "gmma_events":
         # print("gmma!")
+        key = np.round(timestamp_seconds(message.key)/event_min_gap) * event_min_gap
         event = message.value
-        event_list.extend(event)
+        # event_list.extend(event)
+        # event_dict[key].append(event)
+        event_dict[key] = event
     else:
         raise("Topic Error!")
 
@@ -254,9 +261,9 @@ for i, message in enumerate(consumer):
                 # scatters[j].set_edgecolors(colors)
                 # scatters[j].set_facecolors(colors)
                 scatters[j].set_color(colors)
-        print("len(event_list): ", len(event_list))
-        if len(event_list) > 0:
-            t_events, mag_events, loc_events, t0_idx = get_plot_events(event_list, min_t, max_t)
+        print("len(event_dict): ", len(event_dict))
+        if len(event_dict) > 0:
+            t_events, mag_events, loc_events, t0_idx = get_plot_events(event_dict, min_t, max_t)
             print("loc_events: ", loc_events)
             print("mag_events: ", mag_events)
             print("t_events: ", t_events)
@@ -264,6 +271,7 @@ for i, message in enumerate(consumer):
             if len(t_events) > 0:
                 loc_events = np.array(loc_events)
                 scatter_events.set_offsets(loc_events[:,:2])
+                scatter_events.set_sizes(10**np.array(mag_events)*10)
                 alpha = np.array(t_events)/(window_length*(window_number+1)*dt)
                 red = np.zeros([len(alpha),3])
                 red[:,0] = 1.0
