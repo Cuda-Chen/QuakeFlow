@@ -19,6 +19,9 @@ spec:
         image: phasenet-api:1.0
         ports:
         - containerPort: 8000
+        resources:
+          requests:
+            cpu: 200m
         imagePullPolicy: Never
 ---
 apiVersion: v1
@@ -54,6 +57,9 @@ spec:
         image: gmma-api:1.0
         ports:
         - containerPort: 8001
+        resources:
+          requests:
+            cpu: 200m
         imagePullPolicy: Never
 ---
 apiVersion: v1
