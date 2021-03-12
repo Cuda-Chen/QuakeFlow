@@ -7,6 +7,12 @@ import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+import plotly.express as px
+import pandas as pd
+# for visuals,
+import PIL
+from PIL import Image
+import streamlit.components.v1 as components
 
 consumer = KafkaConsumer(
     bootstrap_servers=['localhost:9092'],
@@ -35,6 +41,9 @@ hop_length = 10
 num_sta = 16
 refresh_sec = 1.0
 dt = 0.01
+map_width=900
+map_height=650
+map_zoom=9
 
 
 ## 
@@ -69,6 +78,31 @@ dt = 0.01
 #             handle.line_chart(plot_data)
 #         num_plot += 1
 
+# Layout
+st.markdown(
+        f"""
+<style>
+    .reportview-container .main .block-container{{
+        max-width: 100vw;
+        padding-top: 1rem;
+        padding-right: 1rem;
+        padding-left: 1rem;
+        padding-bottom: 1rem;
+    }}
+    .reportview-container .main {{
+        color: black;
+        background-color: white;
+    }}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+# Insert visuals
+image_data = np.asarray(Image.open('quakeflow logo design 2.jpg'))
+st.image(image_data, caption=None, width=None, use_column_width=None, clamp=False, channels='RGB', output_format='auto')
+st.balloons()
+col1, col2 = st.beta_columns([2, 1])
 
 ### based on matplotlib
 fig, (ax1, ax2)= plt.subplots(2, 1, gridspec_kw={"height_ratios": [1,0.8]}, figsize=(8, 12))
@@ -91,26 +125,56 @@ ax1.scatter([-1], [-1], s=200, c="red", marker="|", label="S-wave")
 ax1.legend(loc="upper left")
 ax1.title.set_text("Streaming Seismic Waveforms and Detected P/S Phases")
 
-ax2.axis("scaled")
-ax2.set_xlabel("x(km)")
-ax2.set_ylabel("y(km)")
-ax2.set_ylim([50, 80])
-ax2.set_xlim([30, 60])
-scatter_events = ax2.scatter([-1], [-1], s=120,  c="r", marker="o", label="Earthquakes")
-ax2.legend(loc="upper left")
-ax2.title.set_text("Associated Earthquakes")
+# ax2.axis("scaled")
+# ax2.set_xlabel("x(km)")
+# ax2.set_ylabel("y(km)")
+# ax2.set_ylim([50, 80])
+# ax2.set_xlim([30, 60])
+# scatter_events = ax2.scatter([-1], [-1], s=120,  c="r", marker="o", label="Earthquakes")
+# ax2.legend(loc="upper left")
+# ax2.title.set_text("Associated Earthquakes")
 
-ui_plot = st.pyplot(plt)
+with col2:
+    ui_plot = st.pyplot(plt)
+    catalog_df_visual = st.empty()
 
-cities = []
-scale = 5000
-fig_temp = go.Figure()
-
-map_figure = st.plotly_chart(fig_temp)
-
-
-
-# plt.show()
+with col1:
+    experimental_df = pd.DataFrame({'lat':[], 'lon':[], 'z':[], 'mag':[], 'time':[], 'size':[]})
+    experimental = px.scatter_mapbox(experimental_df, lat="lat", lon="lon", hover_data=["mag", "time", "lat", "lon"], color_discrete_sequence=["fuchsia"], zoom=map_zoom, height=300)
+    experimental.update_layout(
+        mapbox_style="white-bg",
+        mapbox_layers=[
+            {
+                "below": 'traces',
+                "sourcetype": "raster",
+                "sourceattribution": "United States Geological Survey",
+                "source": [
+                    "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
+                ]
+            }
+          ])
+    experimental.update_layout(
+        showlegend = True,
+        width=map_width,
+        height=map_height,
+        geo = dict(
+            landcolor = 'rgb(217, 217, 217)',
+             lonaxis = dict(
+                showgrid = True,
+                gridwidth = 0.05,
+                range= [ -116.0304497751, -115.0304497751 ],
+                dtick = 5
+            ),
+            lataxis = dict (
+                showgrid = True,
+                gridwidth = 0.05,
+                range= [ 32.4800184066, 33.4800184066],
+                dtick = 5
+            )
+        ),
+    )
+    experimental.update_layout(margin={"r":0.5,"t":0.5,"l":0,"b":0})
+    map_figure_experimental = st.plotly_chart(experimental, width=map_width, height=map_height)
 
 # prev_time = time.time()
 # for i, message in enumerate(consumer):
@@ -270,88 +334,65 @@ for i, message in enumerate(consumer):
             print("t0_idx: ", t0_idx)
             if len(t_events) > 0:
                 loc_events = np.array(loc_events)
-                scatter_events.set_offsets(loc_events[:,:2])
-                scatter_events.set_sizes(10**np.array(mag_events)*10)
-                alpha = np.array(t_events)/(window_length*(window_number+1)*dt)
-                red = np.zeros([len(alpha),3])
-                red[:,0] = 1.0
-                rgba = np.hstack([red, alpha[:,np.newaxis]])
-                scatter_events.set_color(np.clip(rgba, 0, 1))
+                # scatter_events.set_offsets(loc_events[:,:2])
+                # scatter_events.set_sizes(10**np.array(mag_events)*10)
+                # alpha = np.array(t_events)/(window_length*(window_number+1)*dt)
+                # red = np.zeros([len(alpha),3])
+                # red[:,0] = 1.0
+                # rgba = np.hstack([red, alpha[:,np.newaxis]])
+                # scatter_events.set_color(np.clip(rgba, 0, 1))
 
-                #insert plotly code here
-                #reset plot (there seems to be no way to keep track of traces one by one so this will have to do)
-                fig_temp.data = []
                 # organize data into the correct form
                 lng_list, lat_list, z_list = loc_events_organize(loc_events)
-                # for i in range(len(lng_list)):
-                #     fig_temp.add_trace(go.Scattergeo(
-                #         locationmode = 'USA-states',
-                #         lon = [lng_list[i]],
-                #         lat = [lat_list[i]],
-                #         text = "time: %f\nmagnitude: %f"%(t_events[i], mag_events[i]),
-                #         marker = dict(
-                #             size = [max(20.0 ** mag_events[i], 10)],
-                #             color = 'royalblue',
-                #             line_color='rgb(40,40,40)',
-                #             line_width=0.5,
-                #             sizemode = 'area'
-                #         )
-                #     ))
-                #     print("marker size: ", [max(20.0 ** mag_events[i], 10)])
                 
                 # UNCOMMENT OUT THIS LINE TO SEE A SIZE 6 EARTHQUAKE
                 # mag_events[-1] = 6
-                fig_temp.add_trace(go.Scattergeo(
-                    locationmode = 'USA-states',
-                    lon = lng_list,
-                    lat = lat_list,
-                    text = ["time: %f\nmagnitude: %f"%(t_events[i], mag_events[i]) for i in range(len(lng_list))],
-                    marker = dict(
-                        size = [(mag_event**4) * 10 for mag_event in mag_events],
-                        color = 'royalblue',
-                        line_color='rgb(40,40,40)',
-                        line_width=0.5,
-                        sizemode = 'area'
-                    )
-                ))
-                fig_temp.update_layout(
-                        title_text = 'test',
-                        showlegend = True,
-                        width=1000,
-                        height=1000,
-                        geo = dict(
-                            landcolor = 'rgb(217, 217, 217)',
-                            lonaxis = dict(
-                                showgrid = True,
-                                gridwidth = 0.05,
-                                range= [ -116.0304497751, -115.0304497751 ],
-                                dtick = 5
+                with col1:
+                    experimental.data = []
+                    experimental_df = pd.DataFrame({'lat':lat_list, 'lon':lng_list, 'z':z_list, 'mag':mag_events, 'time':t_events, 'size':[(mag_event**4) / 3.5 for mag_event in mag_events]})
+                    experimental = px.scatter_mapbox(experimental_df, lat="lat", lon="lon", hover_data=["mag", "time", "lat", "lon"], size = "size", color_discrete_sequence=["fuchsia"], zoom=map_zoom, height=300)
+                    experimental.update_layout(
+                        mapbox_style="white-bg",
+                        mapbox_layers=[
+                            {
+                                "below": 'traces',
+                                "sourcetype": "raster",
+                                "sourceattribution": "United States Geological Survey",
+                                "source": [
+                                    "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
+                                ]
+                            }
+                          ])
+                    experimental.update_layout(
+                            showlegend = True,
+                            width=map_width,
+                            height=map_height,
+                            geo = dict(
+                                landcolor = 'rgb(217, 217, 217)',
+                                 lonaxis = dict(
+                                    showgrid = True,
+                                    gridwidth = 0.05,
+                                    range= [ -116.0304497751, -115.0304497751 ],
+                                    dtick = 5
+                                ),
+                                lataxis = dict (
+                                    showgrid = True,
+                                    gridwidth = 0.05,
+                                    range= [ 32.4800184066, 33.4800184066],
+                                    dtick = 5
+                                )
                             ),
-                            lataxis = dict (
-                                showgrid = True,
-                                gridwidth = 0.05,
-                                range= [ 32.4800184066, 33.4800184066],
-                                dtick = 5
-                            )
                         )
-                    )
-                fig_temp.update_geos(
-                    resolution=50,
-                    showcoastlines=True, coastlinecolor="RebeccaPurple",
-                    showland=True, landcolor="LightGreen",
-                    showocean=True, oceancolor="LightBlue",
-                    showlakes=True, lakecolor="Blue",
-                    showrivers=True, rivercolor="Blue"
-                )
-                #Uncomment if you want a zoomed-in plot
-                #fig_temp.update_geos(fitbounds="locations")
+                    experimental.update_layout(margin={"r":0.5,"t":0.5,"l":0,"b":0})
 
 
         if len(keys) > 0:
             print("plotting...")
-            ui_plot.pyplot(plt)
-            # insert plotly code here
-            map_figure.plotly_chart(fig_temp)
+            with col2:
+                ui_plot.pyplot(plt)
+                catalog_df_visual.dataframe(experimental_df)
+            with col1:
+                map_figure_experimental.plotly_chart(experimental, width=map_width, height=map_height)
 
     if message.topic == "waveform_raw":
         time.sleep(refresh_sec/num_sta/20)
