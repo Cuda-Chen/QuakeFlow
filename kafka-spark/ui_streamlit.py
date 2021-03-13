@@ -105,7 +105,7 @@ st.balloons()
 col1, col2 = st.beta_columns([2, 1])
 
 ### based on matplotlib
-fig, (ax1, ax2)= plt.subplots(2, 1, gridspec_kw={"height_ratios": [1,0.8]}, figsize=(8, 12))
+fig, (ax1)= plt.subplots(1, 1, figsize=(8, 5.8))
 x = np.arange(window_length*window_number//hop_length) * (dt*hop_length)
 ax1.set_ylim(-1, num_sta)
 ax1.set_xlim(np.around(x[0]), np.around(x[-1]))
@@ -134,6 +134,42 @@ ax1.title.set_text("Streaming Seismic Waveforms and Detected P/S Phases")
 # ax2.legend(loc="upper left")
 # ax2.title.set_text("Associated Earthquakes")
 
+def update_figure_layout(figure):
+    figure.update_layout(
+            mapbox_style="white-bg",
+            mapbox_layers=[
+                {
+                    "below": 'traces',
+                    "sourcetype": "raster",
+                    "sourceattribution": "United States Geological Survey",
+                    "source": [
+                        "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
+                    ]
+                }
+              ])
+    figure.update_layout(
+                showlegend = True,
+                width=map_width,
+                height=map_height,
+                geo = dict(
+                    landcolor = 'rgb(217, 217, 217)',
+                     lonaxis = dict(
+                        showgrid = True,
+                        gridwidth = 0.05,
+                        range= [ -116.0304497751, -115.0304497751 ],
+                        dtick = 5
+                    ),
+                    lataxis = dict (
+                        showgrid = True,
+                        gridwidth = 0.05,
+                        range= [ 32.4800184066, 33.4800184066],
+                        dtick = 5
+                    )
+                ),
+            )
+    figure.update_layout(margin={"r":0.5,"t":0.5,"l":0,"b":0})
+    return figure
+
 with col2:
     ui_plot = st.pyplot(plt)
     catalog_df_visual = st.empty()
@@ -141,39 +177,7 @@ with col2:
 with col1:
     experimental_df = pd.DataFrame({'lat':[], 'lon':[], 'z':[], 'mag':[], 'time':[], 'size':[]})
     experimental = px.scatter_mapbox(experimental_df, lat="lat", lon="lon", hover_data=["mag", "time", "lat", "lon"], color_discrete_sequence=["fuchsia"], zoom=map_zoom, height=300)
-    experimental.update_layout(
-        mapbox_style="white-bg",
-        mapbox_layers=[
-            {
-                "below": 'traces',
-                "sourcetype": "raster",
-                "sourceattribution": "United States Geological Survey",
-                "source": [
-                    "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
-                ]
-            }
-          ])
-    experimental.update_layout(
-        showlegend = True,
-        width=map_width,
-        height=map_height,
-        geo = dict(
-            landcolor = 'rgb(217, 217, 217)',
-             lonaxis = dict(
-                showgrid = True,
-                gridwidth = 0.05,
-                range= [ -116.0304497751, -115.0304497751 ],
-                dtick = 5
-            ),
-            lataxis = dict (
-                showgrid = True,
-                gridwidth = 0.05,
-                range= [ 32.4800184066, 33.4800184066],
-                dtick = 5
-            )
-        ),
-    )
-    experimental.update_layout(margin={"r":0.5,"t":0.5,"l":0,"b":0})
+    experimental = update_figure_layout(experimental)
     map_figure_experimental = st.plotly_chart(experimental, width=map_width, height=map_height)
 
 # prev_time = time.time()
@@ -267,6 +271,14 @@ def loc_events_organize(loc_events):
     lng_list, lat_list = xy_list_to_latlng_list(x_list, y_list)
     return lng_list, lat_list, z_list
 
+def update_figure(figure, col1, col2, lat_list, lng_list, z_list, mag_events, t_events):
+    with col1:
+        figure.data = []
+        figure_df = pd.DataFrame({'lat':lat_list, 'lon':lng_list, 'z':z_list, 'mag':mag_events, 'time':t_events, 'size':[(mag_event**4) / 3.5 for mag_event in mag_events]})
+        figure = px.scatter_mapbox(figure_df, lat="lat", lon="lon", hover_data=["mag", "time", "lat", "lon"], size = "size", color_discrete_sequence=["fuchsia"], zoom=map_zoom, height=300)
+        figure = update_figure_layout(figure)
+    return figure
+
 for i, message in enumerate(consumer):
 
     if message.topic == "waveform_raw":
@@ -334,56 +346,13 @@ for i, message in enumerate(consumer):
             print("t0_idx: ", t0_idx)
             if len(t_events) > 0:
                 loc_events = np.array(loc_events)
-                # scatter_events.set_offsets(loc_events[:,:2])
-                # scatter_events.set_sizes(10**np.array(mag_events)*10)
-                # alpha = np.array(t_events)/(window_length*(window_number+1)*dt)
-                # red = np.zeros([len(alpha),3])
-                # red[:,0] = 1.0
-                # rgba = np.hstack([red, alpha[:,np.newaxis]])
-                # scatter_events.set_color(np.clip(rgba, 0, 1))
 
                 # organize data into the correct form
                 lng_list, lat_list, z_list = loc_events_organize(loc_events)
                 
                 # UNCOMMENT OUT THIS LINE TO SEE A SIZE 6 EARTHQUAKE
                 # mag_events[-1] = 6
-                with col1:
-                    experimental.data = []
-                    experimental_df = pd.DataFrame({'lat':lat_list, 'lon':lng_list, 'z':z_list, 'mag':mag_events, 'time':t_events, 'size':[(mag_event**4) / 3.5 for mag_event in mag_events]})
-                    experimental = px.scatter_mapbox(experimental_df, lat="lat", lon="lon", hover_data=["mag", "time", "lat", "lon"], size = "size", color_discrete_sequence=["fuchsia"], zoom=map_zoom, height=300)
-                    experimental.update_layout(
-                        mapbox_style="white-bg",
-                        mapbox_layers=[
-                            {
-                                "below": 'traces',
-                                "sourcetype": "raster",
-                                "sourceattribution": "United States Geological Survey",
-                                "source": [
-                                    "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
-                                ]
-                            }
-                          ])
-                    experimental.update_layout(
-                            showlegend = True,
-                            width=map_width,
-                            height=map_height,
-                            geo = dict(
-                                landcolor = 'rgb(217, 217, 217)',
-                                 lonaxis = dict(
-                                    showgrid = True,
-                                    gridwidth = 0.05,
-                                    range= [ -116.0304497751, -115.0304497751 ],
-                                    dtick = 5
-                                ),
-                                lataxis = dict (
-                                    showgrid = True,
-                                    gridwidth = 0.05,
-                                    range= [ 32.4800184066, 33.4800184066],
-                                    dtick = 5
-                                )
-                            ),
-                        )
-                    experimental.update_layout(margin={"r":0.5,"t":0.5,"l":0,"b":0})
+                experimental = update_figure(experimental, col1, col2, lat_list, lng_list, z_list, mag_events, t_events)
 
 
         if len(keys) > 0:
