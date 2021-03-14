@@ -297,7 +297,7 @@ def extract_df_from_event_dict(event_dict):
 		z_values.append(event['location'][2])
 		mag_values.append(event['magnitude'])
 		time_values.append(event['time'])
-	event_dict_df = pd.DataFrame({'Latitude (deg)': lat_values, 'Longitude (deg)': lon_values, 'Depth (km)': z_values, 'Richter magnitude': mag_values, 'Time': time_values})
+	event_dict_df = pd.DataFrame({'Magnitude': mag_values, 'Time': time_values, 'Latitude (deg)': lat_values, 'Longitude (deg)': lon_values, 'Depth (km)': z_values})
 	return event_dict_df
 
 # Page header
@@ -311,7 +311,7 @@ col1, col2 = st.beta_columns([2, 1])
 # Initial plotting
 with col1:
     experimental_df = pd.DataFrame({'lat': [], 'lon': [], 'z': [], 'mag': [], 'time': [], 'size': []})
-    event_df = pd.DataFrame({'Latitude (deg)': [], 'Longitude (deg)': [], 'Depth (km)': [], 'Richter magnitude': [], 'Time': []})
+    event_df = pd.DataFrame({'Magnitude': [], 'Time': [], 'Latitude (deg)': [], 'Longitude (deg)': [], 'Depth (km)': []})
     experimental = px.scatter_mapbox(
         experimental_df,
         lat="lat",
