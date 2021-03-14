@@ -241,8 +241,8 @@ def loc_events_organize(loc_events):
     return lng_list, lat_list, z_list
 
 def update_figure(figure, lat_list, lng_list, z_list, mag_events, t_events):
-	if(figure is not None):
-    	figure.data = []
+    if(figure is not None):
+        figure.data = []
     figure_df = pd.DataFrame({'lat': lat_list, 'lon': lng_list, 'z': z_list, 'mag': mag_events,
                               'time': t_events, 'size': [(mag_event**4) / 3.5 for mag_event in mag_events]})
     figure = px.scatter_mapbox(
@@ -264,7 +264,7 @@ def update_figure(figure, lat_list, lng_list, z_list, mag_events, t_events):
 
 def update_figure_with_cols(figure, col1, col2, lat_list, lng_list, z_list, mag_events, t_events):
     with col1:
-    	figure = update_figure(figure, lat_list, lng_list, z_list, mag_events, t_events)
+        figure = update_figure(figure, lat_list, lng_list, z_list, mag_events, t_events)
     return figure
 
 
@@ -293,21 +293,21 @@ def tweepy_status_update(event_dict):
                 #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
 
 def extract_df_from_event_dict(event_dict):
-	event_dict_values = list(event_dict.values())
-	event_dict_values.reverse()
-	lat_values = []
-	lon_values = []
-	z_values = []
-	mag_values = []
-	time_values = []
-	for event in event_dict_values:
-		lon_values.append(lng_from_x(event['location'][0]))
-		lat_values.append(lat_from_y(event['location'][1]))
-		z_values.append(event['location'][2])
-		mag_values.append(event['magnitude'])
-		time_values.append(event['time'])
-	event_dict_df = pd.DataFrame({'Magnitude': mag_values, 'Time': time_values, 'Latitude (deg)': lat_values, 'Longitude (deg)': lon_values, 'Depth (km)': z_values})
-	return event_dict_df
+    event_dict_values = list(event_dict.values())
+    event_dict_values.reverse()
+    lat_values = []
+    lon_values = []
+    z_values = []
+    mag_values = []
+    time_values = []
+    for event in event_dict_values:
+        lon_values.append(lng_from_x(event['location'][0]))
+        lat_values.append(lat_from_y(event['location'][1]))
+        z_values.append(event['location'][2])
+        mag_values.append(event['magnitude'])
+        time_values.append(event['time'])
+    event_dict_df = pd.DataFrame({'Magnitude': mag_values, 'Time': time_values, 'Latitude (deg)': lat_values, 'Longitude (deg)': lon_values, 'Depth (km)': z_values})
+    return event_dict_df
 
 # Page header
 image_data = np.asarray(Image.open('quakeflow logo design 2.jpg'))
