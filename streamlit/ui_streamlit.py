@@ -283,6 +283,22 @@ def tweepy_status_update(event_dict):
                 print("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s" % (mag, lng, lat, z, event_time))
                 #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
 
+def extract_df_from_event_dict(event_dict):
+	event_dict_values = list(event_dict.values())
+	event_dict_values.reverse()
+	lat_values = []
+	lon_values = []
+	z_values = []
+	mag_values = []
+	time_values = []
+	for event in event_dict_values:
+		lon_values.append(lng_from_x(event['location'][0]))
+		lat_values.append(lat_from_y(event['location'][1]))
+		z_values.append(event['location'][2])
+		mag_values.append(event['magnitude'])
+		time_values.append(event['time'])
+	event_dict_df = pd.DataFrame({'Latitude (deg)': lat_values, 'Longitude (deg)': lon_values, 'Depth (km)': z_values, 'Richter magnitude': mag_values, 'Time': time_values})
+	return event_dict_df
 
 # Page header
 image_data = np.asarray(Image.open('quakeflow logo design 2.jpg'))
@@ -295,6 +311,7 @@ col1, col2 = st.beta_columns([2, 1])
 # Initial plotting
 with col1:
     experimental_df = pd.DataFrame({'lat': [], 'lon': [], 'z': [], 'mag': [], 'time': [], 'size': []})
+    event_df = pd.DataFrame({'Latitude (deg)': [], 'Longitude (deg)': [], 'Depth (km)': [], 'Richter magnitude': [], 'Time': []})
     experimental = px.scatter_mapbox(
         experimental_df,
         lat="lat",
@@ -346,7 +363,7 @@ for i, message in enumerate(consumer):
         wave_dict[key] = wave_dict[key][-window_number:]
 
     elif message.topic == "phasenet_picks":
-        print("phasenet!")
+        #print("phasenet!")
         key = message.key
         pick = message.value
         pick_dict[key].append(pick)
@@ -406,12 +423,13 @@ for i, message in enumerate(consumer):
 
                 # update figure
                 experimental, experimental_df = update_figure(experimental, col1, col2, lat_list, lng_list, z_list, mag_events, t_events)
+                event_df = extract_df_from_event_dict(event_dict)
 
         if len(keys) > 0:
             print("plotting...")
             with col2:
                 ui_plot.pyplot(plt)
-                catalog_df_visual.dataframe(experimental_df)
+                catalog_df_visual.dataframe(event_df)
             with col1:
                 map_figure_experimental.plotly_chart(experimental, width=map_width, height=map_height)
 
