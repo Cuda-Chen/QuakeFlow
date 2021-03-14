@@ -240,27 +240,32 @@ def loc_events_organize(loc_events):
     lng_list, lat_list = xy_list_to_latlng_list(x_list, y_list)
     return lng_list, lat_list, z_list
 
+def update_figure(figure, lat_list, lng_list, z_list, mag_events, t_events):
+	if(figure is not None):
+    	figure.data = []
+    figure_df = pd.DataFrame({'lat': lat_list, 'lon': lng_list, 'z': z_list, 'mag': mag_events,
+                              'time': t_events, 'size': [(mag_event**4) / 3.5 for mag_event in mag_events]})
+    figure = px.scatter_mapbox(
+        figure_df,
+        lat="lat",
+        lon="lon",
+        hover_data=[
+            "mag",
+            "time",
+            "lat",
+            "lon"],
+        size="size",
+        color_discrete_sequence=["fuchsia"],
+        zoom=map_zoom,
+        height=300)
+    figure = update_figure_layout(figure)
+    return figure
 
-def update_figure(figure, col1, col2, lat_list, lng_list, z_list, mag_events, t_events):
+
+def update_figure_with_cols(figure, col1, col2, lat_list, lng_list, z_list, mag_events, t_events):
     with col1:
-        figure.data = []
-        figure_df = pd.DataFrame({'lat': lat_list, 'lon': lng_list, 'z': z_list, 'mag': mag_events,
-                                  'time': t_events, 'size': [(mag_event**4) / 3.5 for mag_event in mag_events]})
-        figure = px.scatter_mapbox(
-            figure_df,
-            lat="lat",
-            lon="lon",
-            hover_data=[
-                "mag",
-                "time",
-                "lat",
-                "lon"],
-            size="size",
-            color_discrete_sequence=["fuchsia"],
-            zoom=map_zoom,
-            height=300)
-        figure = update_figure_layout(figure)
-    return figure, figure_df
+    	figure = update_figure(figure, lat_list, lng_list, z_list, mag_events, t_events)
+    return figure
 
 
 def tweepy_status_update(event_dict):
@@ -281,6 +286,10 @@ def tweepy_status_update(event_dict):
                 print("time is %s, current time is %f" % (event_time, time.time()))
                 print("Update status on twitter!")
                 print("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s" % (mag, lng, lat, z, event_time))
+                # get figure using update_figure
+                figure = update_figure(None, [lat], [lng], [z], [mag], [event_time])
+                figure.write_image("twitter_fig.jpg")
+                # api.update_with_media("twitter_fig.jpg", "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s"%(mag, lng, lat, z, event_time))
                 #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
 
 def extract_df_from_event_dict(event_dict):
@@ -422,7 +431,7 @@ for i, message in enumerate(consumer):
                 lng_list, lat_list, z_list = loc_events_organize(loc_events)
 
                 # update figure
-                experimental, experimental_df = update_figure(experimental, col1, col2, lat_list, lng_list, z_list, mag_events, t_events)
+                experimental = update_figure_with_cols(experimental, col1, col2, lat_list, lng_list, z_list, mag_events, t_events)
                 event_df = extract_df_from_event_dict(event_dict)
 
         if len(keys) > 0:
