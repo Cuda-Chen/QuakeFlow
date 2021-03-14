@@ -17,6 +17,8 @@ import tweepy
 import logging
 import sys
 from collections import deque
+from geopy.geocoders import Nominatim
+
 
 # Streamlit layout CSS
 st.markdown(
@@ -63,6 +65,7 @@ map_zoom = 9
 prev_event_bundle = None
 prev_event_bundle = (0.0, 0.0, 0.0, 0.0)
 BOT_MAGNITUDE_THRESHOLD = 1.5
+GEOLOC_TOUT = 5 # in seconds
 
 consumer = None
 # Connection to Kafka
@@ -139,6 +142,16 @@ def create_api():
 api = create_api()
 
 # Functions
+
+def latlon2address(lat, lon, geolocator):
+    try:
+        location = geolocator.reverse(f"{lat}, {lon}")
+        print(location)
+        return location.address
+    except:
+        return None
+
+geolocator = Nominatim(user_agent="http", timeout=5)
 
 
 def update_figure_layout(figure):
@@ -292,8 +305,17 @@ def tweepy_status_update(event_dict):
                 temp_time = time.time()
                 figure.write_image("twitter_fig.png")
                 print("time taken to render: %f"%(time.time() - temp_time))
-                #print("ckpt1")
-                #api.update_with_media("twitter_fig.png", "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s"%(mag, lng, lat, z, event_time))
+    
+                address = latlon2address(lat, lon, geolocator)
+
+                if address is not None:
+                    caption = f"Magnitude {mag} earthquake occurred at address {address} at time {event_time}"
+                    print(caption)
+                    #api.update_with_media("twitter_fig.png", caption)
+                else:
+                    caption = "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s"%(mag, lng, lat, z, event_time)
+                    print(caption)
+                    #api.update_with_media("twitter_fig.png", caption)
                 #print("time taken to upload to twitter: %f"%(time.time() - temp_time))
                 #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
 
