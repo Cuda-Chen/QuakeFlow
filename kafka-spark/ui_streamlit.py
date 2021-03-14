@@ -12,6 +12,11 @@ import pandas as pd
 import PIL
 from PIL import Image
 import streamlit.components.v1 as components
+import os
+import tweepy
+import logging
+import sys
+from collections import deque
 
 # Streamlit layout CSS
 st.markdown(
@@ -49,6 +54,9 @@ dt = 0.01
 map_width = 900
 map_height = 650
 map_zoom = 9
+prev_event_bundle = None
+prev_event_bundle = (0.0, 0.0, 0.0, 0.0)
+BOT_MAGNITUDE_THRESHOLD = 2.5
 
 # Connection to Kafka
 consumer = KafkaConsumer(
@@ -63,6 +71,38 @@ consumer.subscribe(['waveform_raw', 'phasenet_picks', 'gmma_events'])
 # consumer.subscribe(['waveform_raw', 'phasenet_picks'])
 # consumer.subscribe(['waveform_raw'])
 # consumer.subscribe(['phasenet_picks'])
+
+# Setting up Tweepy
+consumer_key = os.getenv('CONSUMER_KEY')
+consumer_secret = os.getenv('CONSUMER_SECRET')
+access_token = os.getenv('ACCESS_TOKEN')
+access_token_secret = os.getenv('ACCESS_TOKEN_SECRET')
+print(consumer_key)
+print(consumer_secret)
+print(access_token)
+print(access_token_secret)
+
+logger = logging.getLogger()
+
+def create_api():
+    consumer_key = os.getenv("CONSUMER_KEY")
+    consumer_secret = os.getenv("CONSUMER_SECRET")
+    access_token = os.getenv("ACCESS_TOKEN")
+    access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
+
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_token_secret)
+    api = tweepy.API(auth, wait_on_rate_limit=True, 
+        wait_on_rate_limit_notify=True)
+    try:
+        api.verify_credentials()
+    except Exception as e:
+        logger.error("Error creating API", exc_info=True)
+        raise e
+    logger.info("API created")
+    return api
+
+api = create_api()
 
 # Functions
 def update_figure_layout(figure):
@@ -166,6 +206,26 @@ def update_figure(figure, col1, col2, lat_list, lng_list, z_list, mag_events, t_
         figure = update_figure_layout(figure)
     return figure, figure_df
 
+def tweepy_status_update(event_dict):
+    if(len(event_dict) > 0):
+        event = list(event_dict.values())[-1]
+        print("tweepy_status_update (event): ", event)
+        event_time = event['time']
+        lng = lng_from_x(event['location'][0])
+        lat = lat_from_y(event['location'][1])
+        z = event['location'][2]
+        mag = event['magnitude']
+        bundle = (lng, lat, z, mag)
+        global prev_event_bundle
+        if(bundle != prev_event_bundle):
+            print("----------New Event----------")
+            prev_event_bundle = bundle
+            if(mag > BOT_MAGNITUDE_THRESHOLD):
+                print("time is %s, current time is %f"%(event_time, time.time()))
+                print("Update status on twitter!")
+                print("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
+                #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
+
 # Page header
 image_data = np.asarray(Image.open('quakeflow logo design 2.jpg'))
 st.image(image_data, caption=None, width=None, use_column_width=None, clamp=False, channels='RGB', output_format='auto')
@@ -204,6 +264,7 @@ with col2:
     catalog_df_visual = st.empty()
 
 prev_time = time.time()
+prev_time_bot = time.time()
 
 # Handle messages from Kafka
 for i, message in enumerate(consumer):
@@ -230,6 +291,12 @@ for i, message in enumerate(consumer):
         event_dict[key] = event
     else:
         raise("Topic Error!")
+
+    # Tweepy timer
+    if time.time() - prev_time_bot > event_min_gap:
+        tweepy_status_update(event_dict)
+        prev_time_bot = time.time()
+
 
     if time.time() - prev_time > refresh_sec:
         prev_time = time.time()
@@ -268,6 +335,8 @@ for i, message in enumerate(consumer):
 
                 # organize data into the correct form
                 lng_list, lat_list, z_list = loc_events_organize(loc_events)
+
+                # update figure
                 experimental, experimental_df = update_figure(experimental, col1, col2, lat_list, lng_list, z_list, mag_events, t_events)
 
         if len(keys) > 0:
