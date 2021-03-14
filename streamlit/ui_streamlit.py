@@ -62,7 +62,7 @@ map_height = 650
 map_zoom = 9
 prev_event_bundle = None
 prev_event_bundle = (0.0, 0.0, 0.0, 0.0)
-BOT_MAGNITUDE_THRESHOLD = 2.5
+BOT_MAGNITUDE_THRESHOLD = 1.5
 
 consumer = None
 # Connection to Kafka
@@ -288,8 +288,13 @@ def tweepy_status_update(event_dict):
                 print("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s" % (mag, lng, lat, z, event_time))
                 # get figure using update_figure
                 figure = update_figure(None, [lat], [lng], [z], [mag], [event_time])
-                figure.write_image("twitter_fig.jpg")
-                # api.update_with_media("twitter_fig.jpg", "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s"%(mag, lng, lat, z, event_time))
+                print(figure)
+                temp_time = time.time()
+                figure.write_image("twitter_fig.png")
+                print("time taken to render: %f"%(time.time() - temp_time))
+                #print("ckpt1")
+                #api.update_with_media("twitter_fig.png", "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s"%(mag, lng, lat, z, event_time))
+                #print("time taken to upload to twitter: %f"%(time.time() - temp_time))
                 #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
 
 def extract_df_from_event_dict(event_dict):
