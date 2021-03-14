@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phasenet-api
+  labels:
+    app: phasenet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phasenet
+  template:
+    metadata:
+      labels:
+        app: phasenet
+    spec:
+      containers:
+      - name: phasenet
+        image: cryolitez/phasenet-api:1.0
+        ports:
+        - containerPort: 8000
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phasenet-api
+spec:
+  selector:
+    app: phasenet
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gmma-api
+  labels:
+    app: gmma
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gmma
+  template:
+    metadata:
+      labels:
+        app: gmma
+    spec:
+      containers:
+      - name: gmma
+        image: cryolitez/gmma-api:1.0
+        ports:
+        - containerPort: 8001
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gmma-api
+spec:
+  selector:
+    app: gmma
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quakeflow-streamlit
+  labels:
+    app: quakeflow-streamlit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quakeflow-streamlit
+  template:
+    metadata:
+      labels:
+        app: quakeflow-streamlit
+    spec:
+      containers:
+      - name: quakeflow-streamlit
+        image: cryolitez/quakeflow-streamlit:1.0
+        ports:
+        - containerPort: 8501
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quakeflow-streamlit
+spec:
+  selector:
+    app: quakeflow-streamlit
+  ports:
+    - protocol: TCP
+      port: 8501
+      targetPort: 8501
+
