@@ -17,6 +17,8 @@ import tweepy
 import logging
 import sys
 from collections import deque
+from geopy.geocoders import Nominatim
+
 
 # Streamlit layout CSS
 st.markdown(
@@ -62,7 +64,8 @@ map_height = 650
 map_zoom = 9
 prev_event_bundle = None
 prev_event_bundle = (0.0, 0.0, 0.0, 0.0)
-BOT_MAGNITUDE_THRESHOLD = 2.5
+BOT_MAGNITUDE_THRESHOLD = 1.5
+GEOLOC_TOUT = 5 # in seconds
 
 consumer = None
 # Connection to Kafka
@@ -139,6 +142,16 @@ def create_api():
 api = create_api()
 
 # Functions
+
+def latlon2address(lat, lon, geolocator):
+    try:
+        location = geolocator.reverse(f"{lat}, {lon}")
+        print(location)
+        return location.address
+    except:
+        return None
+
+geolocator = Nominatim(user_agent="http", timeout=5)
 
 
 def update_figure_layout(figure):
@@ -240,27 +253,32 @@ def loc_events_organize(loc_events):
     lng_list, lat_list = xy_list_to_latlng_list(x_list, y_list)
     return lng_list, lat_list, z_list
 
-
-def update_figure(figure, col1, col2, lat_list, lng_list, z_list, mag_events, t_events):
-    with col1:
+def update_figure(figure, lat_list, lng_list, z_list, mag_events, t_events):
+    if(figure is not None):
         figure.data = []
-        figure_df = pd.DataFrame({'lat': lat_list, 'lon': lng_list, 'z': z_list, 'mag': mag_events,
-                                  'time': t_events, 'size': [(mag_event**4) / 3.5 for mag_event in mag_events]})
-        figure = px.scatter_mapbox(
-            figure_df,
-            lat="lat",
-            lon="lon",
-            hover_data=[
-                "mag",
-                "time",
-                "lat",
-                "lon"],
-            size="size",
-            color_discrete_sequence=["fuchsia"],
-            zoom=map_zoom,
-            height=300)
-        figure = update_figure_layout(figure)
-    return figure, figure_df
+    figure_df = pd.DataFrame({'lat': lat_list, 'lon': lng_list, 'z': z_list, 'mag': mag_events,
+                              'time': t_events, 'size': [(mag_event**4) / 3.5 for mag_event in mag_events]})
+    figure = px.scatter_mapbox(
+        figure_df,
+        lat="lat",
+        lon="lon",
+        hover_data=[
+            "mag",
+            "time",
+            "lat",
+            "lon"],
+        size="size",
+        color_discrete_sequence=["fuchsia"],
+        zoom=map_zoom,
+        height=300)
+    figure = update_figure_layout(figure)
+    return figure
+
+
+def update_figure_with_cols(figure, col1, col2, lat_list, lng_list, z_list, mag_events, t_events):
+    with col1:
+        figure = update_figure(figure, lat_list, lng_list, z_list, mag_events, t_events)
+    return figure
 
 
 def tweepy_status_update(event_dict):
@@ -281,8 +299,42 @@ def tweepy_status_update(event_dict):
                 print("time is %s, current time is %f" % (event_time, time.time()))
                 print("Update status on twitter!")
                 print("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s" % (mag, lng, lat, z, event_time))
+                # get figure using update_figure
+                figure = update_figure(None, [lat], [lng], [z], [mag], [event_time])
+                print(figure)
+                temp_time = time.time()
+                figure.write_image("twitter_fig.png")
+                print("time taken to render: %f"%(time.time() - temp_time))
+    
+                address = latlon2address(lat, lon, geolocator)
+
+                if address is not None:
+                    caption = f"Magnitude {mag} earthquake occurred at address {address} at time {event_time}"
+                    print(caption)
+                    #api.update_with_media("twitter_fig.png", caption)
+                else:
+                    caption = "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s"%(mag, lng, lat, z, event_time)
+                    print(caption)
+                    #api.update_with_media("twitter_fig.png", caption)
+                #print("time taken to upload to twitter: %f"%(time.time() - temp_time))
                 #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
 
+def extract_df_from_event_dict(event_dict):
+    event_dict_values = list(event_dict.values())
+    event_dict_values.reverse()
+    lat_values = []
+    lon_values = []
+    z_values = []
+    mag_values = []
+    time_values = []
+    for event in event_dict_values:
+        lon_values.append(lng_from_x(event['location'][0]))
+        lat_values.append(lat_from_y(event['location'][1]))
+        z_values.append(event['location'][2])
+        mag_values.append(event['magnitude'])
+        time_values.append(event['time'])
+    event_dict_df = pd.DataFrame({'Magnitude': mag_values, 'Time': time_values, 'Latitude (deg)': lat_values, 'Longitude (deg)': lon_values, 'Depth (km)': z_values})
+    return event_dict_df
 
 # Page header
 image_data = np.asarray(Image.open('quakeflow logo design 2.jpg'))
@@ -295,6 +347,7 @@ col1, col2 = st.beta_columns([2, 1])
 # Initial plotting
 with col1:
     experimental_df = pd.DataFrame({'lat': [], 'lon': [], 'z': [], 'mag': [], 'time': [], 'size': []})
+    event_df = pd.DataFrame({'Magnitude': [], 'Time': [], 'Latitude (deg)': [], 'Longitude (deg)': [], 'Depth (km)': []})
     experimental = px.scatter_mapbox(
         experimental_df,
         lat="lat",
@@ -346,7 +399,7 @@ for i, message in enumerate(consumer):
         wave_dict[key] = wave_dict[key][-window_number:]
 
     elif message.topic == "phasenet_picks":
-        print("phasenet!")
+        #print("phasenet!")
         key = message.key
         pick = message.value
         pick_dict[key].append(pick)
@@ -405,13 +458,14 @@ for i, message in enumerate(consumer):
                 lng_list, lat_list, z_list = loc_events_organize(loc_events)
 
                 # update figure
-                experimental, experimental_df = update_figure(experimental, col1, col2, lat_list, lng_list, z_list, mag_events, t_events)
+                experimental = update_figure_with_cols(experimental, col1, col2, lat_list, lng_list, z_list, mag_events, t_events)
+                event_df = extract_df_from_event_dict(event_dict)
 
         if len(keys) > 0:
             print("plotting...")
             with col2:
                 ui_plot.pyplot(plt)
-                catalog_df_visual.dataframe(experimental_df)
+                catalog_df_visual.dataframe(event_df)
             with col1:
                 map_figure_experimental.plotly_chart(experimental, width=map_width, height=map_height)
 
