@@ -78,6 +78,9 @@ def replay_data(producer):
         for i, station_id in enumerate(fakedata['station_id']):
             producer.send('waveform_raw', key=fakedata["station_id"][i],
                           value=(ts, vecs[i].tolist()))
+        
+        # producer.send('waveform_raw', key=fakedata["station_id"][i],
+        #         value=vecs[i].tolist())
 
         # Sleep for 1 second to stimulate real stations
         time.sleep(1.0)
@@ -100,7 +103,7 @@ if __name__ == '__main__':
                                  key_serializer=lambda x: dumps(x).encode('utf-8'),
                                  value_serializer=lambda x: dumps(x).encode('utf-8'))
     except Exception as error:
-        print('k8s kafka not found')
+        print('k8s kafka not found or connection failed, fallback to local')
         BROKER_URL = 'localhost:9092'
         producer = KafkaProducer(bootstrap_servers=[BROKER_URL],
                                  key_serializer=lambda x: dumps(x).encode('utf-8'),
