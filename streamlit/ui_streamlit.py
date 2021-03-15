@@ -80,7 +80,7 @@ try:
         value_deserializer=lambda x: loads(x.decode('utf-8'))
     )
     print('k8s kafka connection success!')
-    consumer.subscribe(['waveform_raw', 'phasenet_picks', 'gmma_events'])
+    consumer.subscribe(['waveform_raw', 'waveform_raw2', 'phasenet_picks', 'gmma_events'])
 except BaseException:
     print('k8s Kafka connection error')
 
@@ -95,7 +95,7 @@ except BaseException:
             value_deserializer=lambda x: loads(x.decode('utf-8'))
         )
         print('local kafka connection success!')
-        consumer.subscribe(['waveform_raw', 'phasenet_picks', 'gmma_events'])
+        consumer.subscribe(['waveform_raw', 'waveform_raw2', 'phasenet_picks', 'gmma_events'])
 
     except BaseException:
         print('local Kafka connection error')
@@ -151,7 +151,7 @@ def latlon2address(lat, lon, geolocator):
     except:
         return None
 
-geolocator = Nominatim(user_agent="http", timeout=5)
+geolocator = Nominatim(user_agent="https", timeout=5)
 
 
 def update_figure_layout(figure):
@@ -306,17 +306,15 @@ def tweepy_status_update(event_dict):
                 figure.write_image("twitter_fig.png")
                 print("time taken to render: %f"%(time.time() - temp_time))
     
-                address = latlon2address(lat, lon, geolocator)
+                address = latlon2address(lat, lng, geolocator)
 
                 if address is not None:
                     caption = f"Magnitude {mag} earthquake occurred at address {address} at time {event_time}"
-                    print(caption)
-                    #api.update_with_media("twitter_fig.png", caption)
                 else:
                     caption = "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s"%(mag, lng, lat, z, event_time)
-                    print(caption)
-                    #api.update_with_media("twitter_fig.png", caption)
-                #print("time taken to upload to twitter: %f"%(time.time() - temp_time))
+                print("time taken to do a geopy API call: %f"%(time.time() - temp_time))
+                api.update_with_media("twitter_fig.png", caption)
+                print("time taken to upload to twitter: %f"%(time.time() - temp_time))
                 #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
 
 def extract_df_from_event_dict(event_dict):
@@ -427,6 +425,7 @@ for i, message in enumerate(consumer):
 
         min_t = prev_time
         max_t = 0
+        # print("len(pick_dict): ", len(pick_dict))
         for j, k in enumerate(keys):
             tmp_vec = []
             tmp_t = []
