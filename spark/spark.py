@@ -7,7 +7,9 @@ from pyspark.streaming.kafka import KafkaUtils
 from pyspark.sql.functions import window
 import numpy as np
 from kafka import KafkaProducer
+import logging
 
+PHASENET_API_URL = "http://34.83.121.2:8000"
 PHASENET_API_URL = "http://localhost:8000"
 
 
@@ -44,7 +46,7 @@ if __name__ == "__main__":
         station_ids, timestamps, vecs = results[0]
         req = {
             'id': station_ids,
-            'timestamp': [x[0] for x in timestamps],  # workaround
+            'timestamp': [str(x[0]) for x in timestamps],  # workaround
             "vec": vecs,
             "dt": 1.0 / SAMPLING_RATE
         }
@@ -68,11 +70,31 @@ if __name__ == "__main__":
         print('##large group##', results)
         producer.send('waveform_grouped', value=results)
 
-    # [groupByKeyAndWindow]
-    # - windowDuration: width of the window, number of seconds
-    # - slideDuration: sliding interval of the window
+    def run_phasenet_waveform_raw(rdd):
+        results = rdd.collect()
+        # Corner case: empty RDD
+        if not results:
+            print('Empty waveform_raw row')
+            return
+        req = {'data': results}
+        try:
+            resp = requests.get('{}/test'.format(PHASENET_API_URL), json=results)
+            print('Phasenet & GMMA resp', resp.json())
+        except Exception as error:
+            print('Phasenet & GMMA error', error)
+        # req = {
+        #     'id': station_ids,
+        #     'timestamp': [str(x[0]) for x in timestamps],  # workaround
+        #     "vec": vecs,
+        #     "dt": 1.0 / SAMPLING_RATE
+        # }
+        # [groupByKeyAndWindow]
+        # - windowDuration: width of the window, number of seconds
+        # - slideDuration: sliding interval of the window
 
-    # -> groupby: (station_id, (timestamp, feat_vecs))
+        # -> groupby: (station_id, (timestamp, feat_vecs))
+    lines.foreachRDD(run_phasenet_waveform_raw)
+
     grouped_df = lines.groupByKeyAndWindow(windowDuration=WINDOW_DURATION + 1, slideDuration=1)
 
     # -> map: (station_id, [(ts_0, vec_0), (ts_1, vec_1), ...]), sort data by timestamp
@@ -94,6 +116,8 @@ if __name__ == "__main__":
 
     # run_phasenet_predict
     df_reduced.foreachRDD(run_phasenet_predict)
+
+    # logging.warning('------------------', df_reduced.collect())
 
     # def dosomething(x):
     #     content = x.collect()
