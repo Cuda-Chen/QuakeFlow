@@ -52,7 +52,23 @@ kubectl run --quiet=true -it --rm quakeflow-kafka-client --restart='Never' --ima
 helm status quakeflow-kafka
 ```
 
+
 6. Rollup restart deployments
 ```
 kubectl rollout restart deployments   
+```
+
+7. Install Dashboard
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml
+```
+
+Run the following command and visit http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+```
+kubectl proxy 
+```
+
+If you are asked to provide a token, get the token with the following command
+```
+gcloud config config-helper --format=json | jq -r '.credential.access_token'
 ```
