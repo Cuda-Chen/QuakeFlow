@@ -307,7 +307,7 @@ def tweep_update_with_media(api, mag, lng, lat, z, event_time, geolocator):
     try:
         api.update_with_media("twitter_fig.png", caption)
         print('Update Twitter with media success!', flush=True)
-        I_MADE_A_TWEET = False  # Demo purpose, don't want to use up all the Twitter API Quota
+        I_MADE_A_TWEET = True  # Demo purpose, don't want to use up all the Twitter API Quota
         print("Time taken to from start to end to fully upload to twitter: %f" % (time.time() - temp_time))
     except BaseException:
         pass
