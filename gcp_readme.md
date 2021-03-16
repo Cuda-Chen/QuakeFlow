@@ -31,25 +31,25 @@ kubectl autoscale deployment quakeflow-streamlit --cpu-percent=80 --min=1 --max=
 4.2 Expose API
 ```
 kubectl expose deployment phasenet-api --type=LoadBalancer --name=phasenet-service
-kubectl expose deployment gmma-api --type=LoadBalancer --name=phasenet-service
-kubectl expose deployment quakeflow-streamlit --type=LoadBalancer --name=phasenet-service
+kubectl expose deployment gmma-api --type=LoadBalancer --name=gmma-service
+kubectl expose deployment quakeflow-streamlit --type=LoadBalancer --name=streamlit-service
 ```
 
 5. Install Kafka
 
 5.1 Install
 ```
-helm install my-kafka bitnami/kafka   
+helm install quakeflow-kafka bitnami/kafka   
 ```
 
 5.2 Create topics
 ```
-kubectl run --quiet=true -it --rm my-kafka-client --restart='Never' --image docker.io/bitnami/kafka:2.7.0-debian-10-r68 --restart=Never --command -- bash -c "kafka-topics.sh --create --topic phasenet_picks --bootstrap-server my-kafka.default.svc.cluster.local:9092 && kafka-topics.sh --create --topic gmma_events --bootstrap-server my-kafka.default.svc.cluster.local:9092 && kafka-topics.sh --create --topic waveform_raw --bootstrap-server my-kafka.default.svc.cluster.local:9092"
+kubectl run --quiet=true -it --rm quakeflow-kafka-client --restart='Never' --image docker.io/bitnami/kafka:2.7.0-debian-10-r68 --restart=Never --command -- bash -c "kafka-topics.sh --create --topic phasenet_picks --bootstrap-server my-kafka.default.svc.cluster.local:9092 && kafka-topics.sh --create --topic gmma_events --bootstrap-server my-kafka.default.svc.cluster.local:9092 && kafka-topics.sh --create --topic waveform_raw --bootstrap-server my-kafka.default.svc.cluster.local:9092"
 ```
 
 5.3 Check status
 ```
-helm status my-kafka
+helm status quakeflow-kafka
 ```
 
 6. Rollup restart deployments
