@@ -12,7 +12,6 @@ import logging
 PHASENET_API_URL = "http://34.83.121.2:8000"
 PHASENET_API_URL = "http://localhost:8000"
 
-
 if __name__ == "__main__":
     WINDOW_DURATION = 30
     NUMBER_OF_BATCHES = 30
@@ -93,6 +92,9 @@ if __name__ == "__main__":
         # - slideDuration: sliding interval of the window
 
         # -> groupby: (station_id, (timestamp, feat_vecs))
+
+    # Comment out this line if you are testing locally
+    # this will stupidly broadcast the waveform to Phasenet again
     lines.foreachRDD(run_phasenet_waveform_raw)
 
     grouped_df = lines.groupByKeyAndWindow(windowDuration=WINDOW_DURATION + 1, slideDuration=1)

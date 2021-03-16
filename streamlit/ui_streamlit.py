@@ -65,7 +65,7 @@ map_zoom = 9
 prev_event_bundle = None
 prev_event_bundle = (0.0, 0.0, 0.0, 0.0)
 BOT_MAGNITUDE_THRESHOLD = 1.5
-GEOLOC_TOUT = 5 # in seconds
+GEOLOC_TOUT = 5  # in seconds
 
 consumer = None
 # Connection to Kafka
@@ -80,7 +80,7 @@ try:
         value_deserializer=lambda x: loads(x.decode('utf-8'))
     )
     print('k8s kafka connection success!')
-    consumer.subscribe(['waveform_raw', 'waveform_raw2', 'phasenet_picks', 'gmma_events'])
+    consumer.subscribe(['waveform_raw', 'phasenet_picks', 'gmma_events'])
 except BaseException:
     print('k8s Kafka connection error')
 
@@ -95,7 +95,7 @@ except BaseException:
             value_deserializer=lambda x: loads(x.decode('utf-8'))
         )
         print('local kafka connection success!')
-        consumer.subscribe(['waveform_raw', 'waveform_raw2', 'phasenet_picks', 'gmma_events'])
+        consumer.subscribe(['waveform_raw', 'phasenet_picks', 'gmma_events'])
 
     except BaseException:
         print('local Kafka connection error')
@@ -126,6 +126,9 @@ def create_api():
     consumer_secret = os.getenv("CONSUMER_SECRET")
     access_token = os.getenv("ACCESS_TOKEN")
     access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
+
+    if not consumer_key:
+        return
     try:
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
         auth.set_access_token(access_token, access_token_secret)
@@ -143,13 +146,15 @@ api = create_api()
 
 # Functions
 
+
 def latlon2address(lat, lon, geolocator):
     try:
         location = geolocator.reverse(f"{lat}, {lon}")
         print(location)
         return location.address
-    except:
+    except BaseException:
         return None
+
 
 geolocator = Nominatim(user_agent="https", timeout=5)
 
@@ -253,6 +258,7 @@ def loc_events_organize(loc_events):
     lng_list, lat_list = xy_list_to_latlng_list(x_list, y_list)
     return lng_list, lat_list, z_list
 
+
 def update_figure(figure, lat_list, lng_list, z_list, mag_events, t_events):
     if(figure is not None):
         figure.data = []
@@ -304,18 +310,20 @@ def tweepy_status_update(event_dict):
                 print(figure)
                 temp_time = time.time()
                 figure.write_image("twitter_fig.png")
-                print("time taken to render: %f"%(time.time() - temp_time))
-    
+                print("time taken to render: %f" % (time.time() - temp_time))
+
                 address = latlon2address(lat, lng, geolocator)
 
                 if address is not None:
                     caption = f"Magnitude {mag} earthquake occurred at address {address} at time {event_time}"
                 else:
-                    caption = "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s"%(mag, lng, lat, z, event_time)
-                print("time taken to do a geopy API call: %f"%(time.time() - temp_time))
-                api.update_with_media("twitter_fig.png", caption)
-                print("time taken to upload to twitter: %f"%(time.time() - temp_time))
+                    caption = "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s" % (
+                        mag, lng, lat, z, event_time)
+                print("time taken to do a geopy API call: %f" % (time.time() - temp_time))
+                # api.update_with_media("twitter_fig.png", caption)
+                print("time taken to upload to twitter: %f" % (time.time() - temp_time))
                 #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
+
 
 def extract_df_from_event_dict(event_dict):
     event_dict_values = list(event_dict.values())
@@ -331,8 +339,10 @@ def extract_df_from_event_dict(event_dict):
         z_values.append(event['location'][2])
         mag_values.append(event['magnitude'])
         time_values.append(event['time'])
-    event_dict_df = pd.DataFrame({'Magnitude': mag_values, 'Time': time_values, 'Latitude (deg)': lat_values, 'Longitude (deg)': lon_values, 'Depth (km)': z_values})
+    event_dict_df = pd.DataFrame({'Magnitude': mag_values, 'Time': time_values, 'Latitude (deg)': lat_values,
+                                  'Longitude (deg)': lon_values, 'Depth (km)': z_values})
     return event_dict_df
+
 
 # Page header
 image_data = np.asarray(Image.open('quakeflow logo design 2.jpg'))
@@ -390,14 +400,15 @@ prev_time_bot = time.time()
 for i, message in enumerate(consumer):
 
     if message.topic == "waveform_raw":
-        key = message.key
+        key = message.key.strip('"')
         timestamp = message.value[0]
+        # print(timestamp)
         vec = message.value[1]
         wave_dict[key].append(message.value)
         wave_dict[key] = wave_dict[key][-window_number:]
 
     elif message.topic == "phasenet_picks":
-        #print("phasenet!")
+        # print("phasenet!")
         key = message.key
         pick = message.value
         pick_dict[key].append(pick)
@@ -410,6 +421,7 @@ for i, message in enumerate(consumer):
         # event_dict[key].append(event)
         event_dict[key] = event
     else:
+        print(message.topic)
         raise("Topic Error!")
 
     # Tweepy timer
@@ -436,6 +448,9 @@ for i, message in enumerate(consumer):
                 tmp_t.append(v[0])
 
             lines[j].set_ydata(normalize(np.array(tmp_vec)[::hop_length, -1]) / 5 + j)
+            # print(pick_dict.keys())
+            # print(k, len(k))
+
             if k in pick_dict:
 
                 t0 = timestamp_seconds(max(tmp_t)) - window_length * (window_number - 1) * dt
