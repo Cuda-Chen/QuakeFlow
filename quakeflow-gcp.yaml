@@ -20,6 +20,11 @@ spec:
         ports:
         - containerPort: 8000
         imagePullPolicy: Always
+        resources:
+          # You must specify requests for CPU to autoscale
+          # based on CPU utilization
+          requests:
+            cpu: "1000m"
 ---
 apiVersion: v1
 kind: Service
@@ -55,6 +60,9 @@ spec:
         ports:
         - containerPort: 8001
         imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "1000m"
 ---
 apiVersion: v1
 kind: Service
@@ -90,6 +98,9 @@ spec:
         ports:
         - containerPort: 8501
         imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "1000m"
 ---
 apiVersion: v1
 kind: Service
