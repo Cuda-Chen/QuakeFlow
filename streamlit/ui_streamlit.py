@@ -18,6 +18,7 @@ import logging
 import sys
 from collections import deque
 from geopy.geocoders import Nominatim
+import threading
 
 
 # Streamlit layout CSS
@@ -66,6 +67,7 @@ prev_event_bundle = None
 prev_event_bundle = (0.0, 0.0, 0.0, 0.0)
 BOT_MAGNITUDE_THRESHOLD = 1.5
 GEOLOC_TOUT = 5  # in seconds
+I_MADE_A_TWEET = False
 
 consumer = None
 # Connection to Kafka
@@ -287,6 +289,30 @@ def update_figure_with_cols(figure, col1, col2, lat_list, lng_list, z_list, mag_
     return figure
 
 
+def tweep_update_with_media(api, mag, lng, lat, z, event_time, geolocator):
+    temp_time = time.time()
+    # get figure using update_figure
+    figure = update_figure(None, [lat], [lng], [z], [mag], [event_time])
+    figure.write_image("twitter_fig.png")
+    print("Time taken to render: %f" % (time.time() - temp_time))
+
+    address = latlon2address(lat, lng, geolocator)
+
+    if address is not None:
+        caption = f"Magnitude {mag} earthquake occurred at address {address} at time {event_time}"
+    else:
+        caption = "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s" % (
+            mag, lng, lat, z, event_time)
+
+    try:
+        api.update_with_media("twitter_fig.png", caption)
+        print('Update Twitter with media success!', flush=True)
+        I_MADE_A_TWEET = False  # Demo purpose, don't want to use up all the Twitter API Quota
+        print("Time taken to from start to end to fully upload to twitter: %f" % (time.time() - temp_time))
+    except BaseException:
+        pass
+
+
 def tweepy_status_update(event_dict):
     if(len(event_dict) > 0):
         event = list(event_dict.values())[-1]
@@ -301,28 +327,22 @@ def tweepy_status_update(event_dict):
         if(bundle != prev_event_bundle):
             print("----------New Event----------")
             prev_event_bundle = bundle
-            if(mag > BOT_MAGNITUDE_THRESHOLD):
+            if mag > BOT_MAGNITUDE_THRESHOLD and api is not None and not I_MADE_A_TWEET:
                 print("time is %s, current time is %f" % (event_time, time.time()))
-                print("Update status on twitter!")
+                print("Try to update status on twitter............")
                 print("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s" % (mag, lng, lat, z, event_time))
-                # get figure using update_figure
-                figure = update_figure(None, [lat], [lng], [z], [mag], [event_time])
-                print(figure)
+
+                upload_thread = threading.Thread(
+                    target=tweep_update_with_media, name="Uploader", args=(
+                        api, mag, lng, lat, z, event_time, geolocator, ))
+                upload_thread.start()
+
                 temp_time = time.time()
-                figure.write_image("twitter_fig.png")
-                print("time taken to render: %f" % (time.time() - temp_time))
-
-                address = latlon2address(lat, lng, geolocator)
-
-                if address is not None:
-                    caption = f"Magnitude {mag} earthquake occurred at address {address} at time {event_time}"
-                else:
-                    caption = "Magnitude %f earthquake happened at longitude %f degrees, latitude %f degrees at depth %f km at time %s" % (
-                        mag, lng, lat, z, event_time)
-                print("time taken to do a geopy API call: %f" % (time.time() - temp_time))
-                # api.update_with_media("twitter_fig.png", caption)
-                print("time taken to upload to twitter: %f" % (time.time() - temp_time))
-                #api.update_status("Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s"%(mag, lng, lat, z, event_time))
+                # Pure text upload, will be fast
+                # api.update_status(
+                #     "Magnitude %f earthquake happened at longitude %f, latitude %f at depth %f at time %s" %
+                #     (mag, lng, lat, z, event_time))
+                print("Time taken for fast alert: %f" % (time.time() - temp_time))  # It took: 0.161690 seconds
 
 
 def extract_df_from_event_dict(event_dict):
