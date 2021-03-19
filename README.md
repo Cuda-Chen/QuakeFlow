@@ -18,7 +18,7 @@ To run the code locally, check out the guide [here](kafka-spark).
 
 ## A Quick Glance
 
-QuakeFlow is a scalable deep-learning-based earthquake monitoring system with cloud computing. It applies the state-of-art deep learning/machine learning models for earthquake detection. With auto-scaling enabled on Kubernetes, our system can also balance computational loads with computational resources. 
+QuakeFlow is a scalable deep-learning-based earthquake monitoring system with cloud computing. It applies the state-of-art deep learning/machine learning models for earthquake detection. With auto-scaling enabled on Kubernetes, our system can balance computational loads with computational resources. 
 
 Checkout our Twitter Bot for realtime earthquake early warning at [@Quakeflow_Bot](https://twitter.com/QuakeFlow_bot).
 
