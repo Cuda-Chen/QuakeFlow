@@ -20,7 +20,7 @@ def call_api(req):
     resp = None
     while resp is None:
         try:
-            resp = requests.get("http://34.83.156.209:8000/predict2gmma", json=req)
+            resp = requests.get("http://34.83.118.102:8000/predict2gmma", json=req)
         except Exception as e:
             print(e)
     # return resp
@@ -101,6 +101,7 @@ if __name__ == '__main__':
         prev_time = time.time()
         # processes = replay_data()
         req_list = replay_data()
+        req_list = 
         print(f"Data generated: {time.time()-prev_time}s")
         pool.map(call_api, req_list)
         # for p in processes:

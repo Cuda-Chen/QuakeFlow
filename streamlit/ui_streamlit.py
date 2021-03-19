@@ -307,6 +307,7 @@ def tweep_update_with_media(api, mag, lng, lat, z, event_time, geolocator):
     try:
         api.update_with_media("twitter_fig.png", caption)
         print('Update Twitter with media success!', flush=True)
+        global I_MADE_A_TWEET
         I_MADE_A_TWEET = True  # Demo purpose, don't want to use up all the Twitter API Quota
         print("Time taken to from start to end to fully upload to twitter: %f" % (time.time() - temp_time))
     except BaseException:
@@ -327,6 +328,7 @@ def tweepy_status_update(event_dict):
         if(bundle != prev_event_bundle):
             print("----------New Event----------")
             prev_event_bundle = bundle
+
             if mag > BOT_MAGNITUDE_THRESHOLD and api is not None and not I_MADE_A_TWEET:
                 print("time is %s, current time is %f" % (event_time, time.time()))
                 print("Try to update status on twitter............")
