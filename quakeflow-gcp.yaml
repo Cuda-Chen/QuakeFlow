@@ -5,7 +5,7 @@ metadata:
   labels:
     app: phasenet
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: phasenet
@@ -45,7 +45,7 @@ metadata:
   labels:
     app: gmma
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: gmma

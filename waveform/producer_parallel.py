@@ -20,7 +20,7 @@ def call_api(req):
     resp = None
     while resp is None:
         try:
-            resp = requests.get("http://34.83.156.209:8000/predict2gmma", json=req)
+            resp = requests.get("http://34.83.118.102:8000/predict2gmma", json=req)
         except Exception as e:
             print(e)
     # return resp

@@ -1,5 +1,6 @@
 # Spark checkpoints
 checkpoint-*
+twitter_fig.*
 
 # log files
 log.*

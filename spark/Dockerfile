@@ -47,13 +47,13 @@ COPY env.yml /app
 RUN conda env create --name cs329s --file=env.yml
 SHELL ["conda", "run", "-n", "cs329s", "/bin/bash", "-c"]
 
-COPY requirements.txt /app
-RUN pip3 install -r requirements.txt
+# COPY requirements.txt /app
+# RUN pip3 install -r requirements.txt
 
 
 COPY . /app
-ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cs329s", "spark-submit", "--conf", "spark.driver.extraJavaOptions=-Duser.timezone=UTC", \
-    "--conf", "spark.executor.extraJavaOptions=-Duser.timezone=UTC", \
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cs329s", "spark-submit", "--conf", "spark.driver.extraJavaOptions=-Duser.timezone=PST", \
+    "--conf", "spark.executor.extraJavaOptions=-Duser.timezone=PST", \
     "--packages", "org.apache.spark:spark-streaming-kafka-0-8_2.11:2.3.3", "/app/spark.py"]
 # CMD /spark-2.4.7-bin-hadoop2.7/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.4.0 /app/spark.py
 
