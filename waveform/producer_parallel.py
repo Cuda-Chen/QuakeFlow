@@ -1,6 +1,6 @@
 from time import sleep
 from json import dumps
-from kafka import KafkaProducer
+#from kafka import KafkaProducer
 import numpy as np
 import pickle
 import datetime
@@ -80,36 +80,59 @@ def replay_data():
 
         # Next iteration
         idx += window_size
+        break
 
     # return processes
     return req_list
 
 if __name__ == '__main__':
 
-    start_time = time.time()
     
     processes_list = []
 
-    # req_list = replay_data()
-    # num_parallel = len(req_list)
-    num_parallel = 8
+    req_list = replay_data()
+    num_parallel = len(req_list)
 
-    pool = multiprocessing.Pool(processes=num_parallel)
-
-    repeat = 5
-    for i in range(repeat):
-        prev_time = time.time()
-        # processes = replay_data()
-        req_list = replay_data()
-        print(f"Data generated: {time.time()-prev_time}s")
-        pool.map(call_api, req_list)
-        # for p in processes:
-        #     p.join()
-        # processes_list.extend(processes)
-        print(f"Iter {i}: {time.time()-prev_time}s")
-
-    # for p in processes_list:
-    #     p.join()
+    #for num_parallel in [1,2,4,8,16,32,64]:
+    #for num_parallel in [256, 128,64,32,16,8,4,2,1]:
+    for num_parallel in [64,32,16,8,4,2,1]:
+        # num_parallel = 8
     
-    print(f"Processing time: {(time.time()-start_time)/repeat}s")
-    pool.close()
+        pool = multiprocessing.Pool(processes=num_parallel)
+    
+        ## dummy run to start autoscaling
+
+        if num_parallel == 64:
+            repeat = 10
+        else:
+            repeat = 3
+        for i in range(repeat):
+            prev_time = time.time()
+            # processes = replay_data()
+            #req_list = replay_data()
+            #print(f"Dummy: Data generated: {time.time()-prev_time}s")
+            pool.map(call_api, req_list*num_parallel)
+            # for p in processes:
+            #     p.join()
+            # processes_list.extend(processes)
+            print(f"Parallel = {num_parallel}; Dummy: Iter {i}: {time.time()-prev_time}s")
+            time.sleep(5.0)
+    
+        start_time = time.time()
+        repeat = 3
+        for i in range(repeat):
+            prev_time = time.time()
+            # processes = replay_data()
+            #req_list = replay_data()
+            #print(f"Data generated: {time.time()-prev_time}s")
+            pool.map(call_api, req_list*num_parallel)
+            # for p in processes:
+            #     p.join()
+            # processes_list.extend(processes)
+            print(f"Parallel = {num_parallel}; Iter {i}: {time.time()-prev_time}s")
+    
+        # for p in processes_list:
+        #     p.join()
+        
+        print(f"Parallel = {num_parallel}; Processing time: {(time.time()-start_time)/repeat}s")
+        pool.close()
