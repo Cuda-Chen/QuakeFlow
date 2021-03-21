@@ -1,6 +1,8 @@
 [submodule "GMMA"]
 	path = GMMA
 	url = https://github.com/wayneweiqiang/GMMA.git
+ 	branch = quakeflow
 [submodule "PhaseNet"]
 	path = PhaseNet
-	url = https://github.com/wayneweiqiang/PhaseNet.git
+ 	url = https://github.com/wayneweiqiang/PhaseNet.git
+ 	branch = quakeflow
