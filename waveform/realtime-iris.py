@@ -50,13 +50,14 @@ plt.axis("scaled")
 stations
 
 
-# In[12]:
+# In[23]:
 
 
 class Client(EasySeedLinkClient):
     def on_data(self, trace):
         print('Received trace:', trace.id)
         print(trace)
+        value = {"timestamp":trace.stats.starttime.datetime.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3], "vec":trace.data.tolist()}
             
 client = Client('rtserve.iris.washington.edu:18000')
 for index, row in stations.iterrows():
