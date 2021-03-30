@@ -11,10 +11,11 @@ warnings.filterwarnings("ignore")
 # In[1]:
 
 
-#get_ipython().system('git clone -b factorize https://github.com/wayneweiqiang/PhaseNet.git')
-#get_ipython().system('git clone https://github.com/wayneweiqiang/GMMA.git')
-#get_ipython().system('conda env create quakeflow --file=env.yml')
-#get_ipython().system('python -m ipykernel install --user --name=quakeflow')
+#os.system('git clone -b factorize https://github.com/wayneweiqiang/PhaseNet.git')
+#os.system('git clone https://github.com/wayneweiqiang/GMMA.git')
+#os.system('conda env create quakeflow --file=env.yml')
+#os.system('conda activate quakeflow')
+#os.system('python -m ipykernel install --user --name=quakeflow')
 ## select jupyter notebook kernel to quakflow
 
 
@@ -32,7 +33,7 @@ from kfp.components import InputPath, OutputPath
 
 import os
 import matplotlib
-# matplotlib.use("agg")
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
 
 dir_name = "ridgecrest"
@@ -189,7 +190,7 @@ def download_events(config_pkl: InputPath("pickle"),
     plt.ylabel("Latitude")
     plt.axis("scaled")
 #     plt.savefig(os.path.join(data_path, "events_loc.png"))
-    plt.show()
+    # plt.show()
     
     plt.figure()
     plt.plot_date(catalog["time"], catalog["magnitude"], '.', markersize=1)
@@ -197,7 +198,7 @@ def download_events(config_pkl: InputPath("pickle"),
     plt.ylabel("Magnitude")
     plt.title(f"Number of events: {len(events)}")
 #     plt.savefig(os.path.join(data_path, "events_mag_time.png"))
-    plt.show()
+    # plt.show()
 
 
 # In[21]:
@@ -260,9 +261,6 @@ def download_stations(config_pkl: InputPath("pickle"),
     for network in stations:
         for station in network:
             for chn in station:
-#                 x = (chn.longitude - config["center"][0])*config["degree2km"]
-#                 y = (chn.latitude - config["center"][1])*config["degree2km"]
-#                 z = -chn.elevation / 1e3 #km
                 sid = f"{network.code}.{station.code}.{chn.location_code}.{chn.code[:-1]}"
                 if sid in station_locs:
                     station_locs[sid]["component"] += f",{chn.code[-1]}"
@@ -272,7 +270,6 @@ def download_stations(config_pkl: InputPath("pickle"),
                     response = f"{chn.response.instrument_sensitivity.value:.2f}"
                     dtype = chn.response.instrument_sensitivity.input_units.lower()
                     tmp_dict = {}
-#                     tmp_dict["x(km)"], tmp_dict["y(km)"], tmp_dict["z(km)"] = x, y, z
                     tmp_dict["longitude"], tmp_dict["latitude"], tmp_dict["elevation(m)"] = chn.longitude, chn.latitude, chn.elevation
                     tmp_dict["component"], tmp_dict["response"], tmp_dict["unit"] = component, response, dtype
                     station_locs[sid] = tmp_dict
@@ -281,7 +278,6 @@ def download_stations(config_pkl: InputPath("pickle"),
     station_locs.to_csv(station_csv,
                         sep="\t", float_format="%.3f",
                         index_label="station",
-#                         columns=["x(km)", "y(km)", "z(km)", "latitude", "longitude", "elevation(m)", "unit", "component", "response"])
                         columns=["longitude", "latitude", "elevation(m)", "unit", "component", "response"])
 
     with open(station_pkl, "wb") as fp:
@@ -290,14 +286,13 @@ def download_stations(config_pkl: InputPath("pickle"),
 #     ####### Plot stations ########
     plt.figure()
     plt.plot(station_locs["longitude"], station_locs["latitude"], "^", label="Stations")
-#     plt.plot(catalog["x(km)"], catalog["y(km)"], "k.", label="Earthquakes")
     plt.xlabel("X (km)")
     plt.ylabel("Y (km)")
     plt.axis("scaled")
     plt.legend()
     plt.title(f"Number of stations: {len(station_locs)}")
 #     plt.savefig(os.path.join(data_path, "stations_loc.png"))
-    plt.show()
+    # plt.show()
 
 
 # In[24]:
@@ -337,6 +332,8 @@ def download_waveform(i: int,
     import obspy
     from obspy.clients.fdsn import Client
     import time
+    import threading
+    lock = threading.Lock()
     
 #     from minio import Minio
 #     minioClient = Minio(s3_url,
@@ -367,7 +364,9 @@ def download_waveform(i: int,
     ####### Download data ########
     client = Client(config["client"])
     fname_list = ["fname"]
-    for i in idx: 
+    
+    def download(i):
+#     for i in idx: 
         starttime = obspy.UTCDateTime(starttimes[i]) 
         endtime = starttime + interval
         fname = "{}.mseed".format(starttime.datetime.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -375,7 +374,8 @@ def download_waveform(i: int,
         if os.path.exists(os.path.join(waveform_dir, fname)):
             print(f"{fname} exists")
             fname_list.append(fname)
-            continue
+#             continue
+            return
         max_retry = 10
         stream = obspy.Stream()
         print(f"{fname} download starts")
@@ -401,7 +401,17 @@ def download_waveform(i: int,
         stream.write(os.path.join(waveform_dir, fname))
         print(f"{fname} download succeeds")
 #         minioClient.fput_object(bucket_name, fname, os.path.join(waveform_dir, fname))
+        lock.acquire()
         fname_list.append(fname)
+        lock.release()
+    
+    threads = []
+    for i in idx:
+        t = threading.Thread(target=download, args=(i,))
+        t.start()
+        threads.append(t)
+    for t in threads:
+        t.join()
     
     with open(fname_csv, "w") as fp:
         fp.write("\n".join(fname_list))
@@ -455,7 +465,7 @@ def phasenet_op(data_path: str,
 
 command = f"python PhaseNet/phasenet/predict.py --model=PhaseNet/model/190703-214543 --data_list={root_dir('fname.csv')} --data_dir={root_dir('waveforms')} --stations={root_dir('stations.csv')} --result_dir={root_dir('phasenet')} --format=mseed_array --amplitude"
 print(command)
-get_ipython().system('{command}')
+os.system(f'{command}')
 
 
 # In[219]:
