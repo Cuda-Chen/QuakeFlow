@@ -669,7 +669,6 @@ def gmma(i: int,
     picks = picks.join(assignments.set_index("pick_idx")).fillna(-1).astype({'event_idx': int})
     with open(picks_csv, 'w') as fp:
         picks.to_csv(fp, sep="\t", index=False, 
-                        float_format="%.3f",
                         date_format='%Y-%m-%dT%H:%M:%S.%f',
                         columns=["id", "timestamp", "type", "prob", "amp", "event_idx", "prob_gmma"])
     
