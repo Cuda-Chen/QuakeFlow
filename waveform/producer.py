@@ -75,9 +75,16 @@ def replay_data(producer):
         ################################################################################
 
         # Send stream of station data to Kafka
+
+        ## for spark.py
+        #for i, station_id in enumerate(fakedata['station_id']):
+        #    producer.send('waveform_raw', key=fakedata["station_id"][i],
+        #                  value=(ts, vecs[i].tolist()))
+
+        ## for spark_structure.py
         for i, station_id in enumerate(fakedata['station_id']):
             producer.send('waveform_raw', key=fakedata["station_id"][i],
-                          value=(ts, vecs[i].tolist()))
+                          value={"timestamp":ts, "vec":vecs[i].tolist()}
         
         # producer.send('waveform_raw', key=fakedata["station_id"][i],
         #         value=vecs[i].tolist())
