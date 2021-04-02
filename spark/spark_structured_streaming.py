@@ -23,7 +23,7 @@ df = df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)", "timestamp")\
     .withColumn("value", F.from_json(col("value"), schema))\
     .withColumn("vec", col('value.vec'))\
     .withColumn("vec_timestamp", col('value.timestamp'))\
-    .withColumn("vec_timestamp_utc", F.from_utc_timestamp(col('value.timestamp'), "UTC"))\
+    .withColumn("vec_timestamp_utc", F.from_utc_timestamp(col('value.timestamp'), "UTC"))
 
 df_window = df.withWatermark("vec_timestamp_utc", "1.5 seconds") \
     .groupBy(df.key, F.window("vec_timestamp_utc", "30 seconds", "3 seconds"))\
@@ -31,7 +31,7 @@ df_window = df.withWatermark("vec_timestamp_utc", "1.5 seconds") \
     .filter(F.size(col("collected_list")) == 30)\
     .withColumn("vec", F.flatten(col("collected_list.vec")))\
     .withColumn("vec_timestamp", col("collected_list.vec_timestamp").getItem(0))\
-    .drop("collected_list")\
+    .drop("collected_list")
 
 
 def foreach_batch_function(df_batch, batch_id):
@@ -57,6 +57,7 @@ def foreach_batch_function(df_batch, batch_id):
             print('Phasenet & GMMA error', error)
 
     return None
+
 
 query = df_window.writeStream \
     .format("memory")\

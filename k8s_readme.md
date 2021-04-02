@@ -5,17 +5,18 @@
 
 1. Install
 ```
-helm install my-kafka bitnami/kafka   
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install quakeflow-kafka bitnami/kafka   
 ```
 
 2. Create topics
 ```
-kubectl run --quiet=true -it --rm my-kafka-client --restart='Never' --image docker.io/bitnami/kafka:2.7.0-debian-10-r68 --restart=Never --command -- bash -c "kafka-topics.sh --create --topic phasenet_picks --bootstrap-server my-kafka.default.svc.cluster.local:9092 && kafka-topics.sh --create --topic gmma_events --bootstrap-server my-kafka.default.svc.cluster.local:9092 && kafka-topics.sh --create --topic waveform_raw --bootstrap-server my-kafka.default.svc.cluster.local:9092"
+kubectl run --quiet=true -it --rm quakeflow-kafka-client --restart='Never' --image docker.io/bitnami/kafka:2.7.0-debian-10-r68 --restart=Never --command -- bash -c "kafka-topics.sh --create --topic phasenet_picks --bootstrap-server quakeflow-kafka.default.svc.cluster.local:9092 && kafka-topics.sh --create --topic gmma_events --bootstrap-server quakeflow-kafka.default.svc.cluster.local:9092 && kafka-topics.sh --create --topic waveform_raw --bootstrap-server quakeflow-kafka.default.svc.cluster.local:9092"
 ```
 
 2. Check status
 ```
-helm status my-kafka
+helm status quakeflow-kafka
 ```
 
 ## Our own containers

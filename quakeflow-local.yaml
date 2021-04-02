@@ -121,70 +121,47 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: quakeflow-zookeeper
+  name: quakeflow-streamlit
   labels:
-    app: quakeflow-zookeeper
+    app: quakeflow-streamlit
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: quakeflow-zookeeper
+      app: quakeflow-streamlit
   template:
     metadata:
       labels:
-        app: quakeflow-zookeeper
+        app: quakeflow-streamlit
     spec:
       containers:
-      - name: quakeflow-zookeeper
-        image: quakeflow-zookeeper:1.0
+      - name: quakeflow-streamlit
+        image: quakeflow-streamlit:1.0
         ports:
-        - containerPort: 2181
+        - containerPort: 8501
         imagePullPolicy: Never
+        resources:
+          requests:
+            cpu: "250m"
+        env:
+        - name: CONSUMER_KEY
+          value: "YOUR_CONSUMER_KEY"
+        - name: CONSUMER_SECRET
+          value: "YOUR_CONSUMER_SECRET"
+        - name: ACCESS_TOKEN
+          value: "YOUR_ACCESS_TOKEN"
+        - name: ACCESS_TOKEN_SECRET
+          value: "YOUR_ACCESS_TOKEN_SECRET"      
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: quakeflow-zookeeper
+  name: quakeflow-streamlit
 spec:
   selector:
-    app: quakeflow-zookeeper
+    app: quakeflow-streamlit
   ports:
     - protocol: TCP
-      port: 2181
-      targetPort: 2181
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: quakeflow-kafka
-  labels:
-    app: quakeflow-kafka
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: quakeflow-kafka
-  template:
-    metadata:
-      labels:
-        app: quakeflow-kafka
-    spec:
-      containers:
-      - name: quakeflow-kafka
-        image: quakeflow-kafka:1.0
-        ports:
-        - containerPort: 9092
-        imagePullPolicy: Never
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: quakeflow-kafka
-spec:
-  selector:
-    app: quakeflow-kafka
-  ports:
-    - protocol: TCP
-      port: 9092
-      targetPort: 9092
----
+      port: 8501
+      targetPort: 8501
+
