@@ -420,13 +420,12 @@ prev_time_bot = time.time()
 
 # Handle messages from Kafka
 for i, message in enumerate(consumer):
-
     if message.topic == "waveform_raw":
         key = message.key.strip('"')
-        timestamp = message.value[0]
+        timestamp = message.value['timestamp']
         # print(timestamp)
-        vec = message.value[1]
-        wave_dict[key].append(message.value)
+        vec = message.value['vec']
+        wave_dict[key].append([message.value['timestamp'], message.value['vec']])
         wave_dict[key] = wave_dict[key][-window_number:]
 
     elif message.topic == "phasenet_picks":
