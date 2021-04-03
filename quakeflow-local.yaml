@@ -117,51 +117,51 @@ spec:
       - name: waveform
         image: quakeflow-waveform:1.0
         imagePullPolicy: Never
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: quakeflow-streamlit
-  labels:
-    app: quakeflow-streamlit
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: quakeflow-streamlit
-  template:
-    metadata:
-      labels:
-        app: quakeflow-streamlit
-    spec:
-      containers:
-      - name: quakeflow-streamlit
-        image: quakeflow-streamlit:1.0
-        ports:
-        - containerPort: 8501
-        imagePullPolicy: Never
-        resources:
-          requests:
-            cpu: "250m"
-        env:
-        - name: CONSUMER_KEY
-          value: "YOUR_CONSUMER_KEY"
-        - name: CONSUMER_SECRET
-          value: "YOUR_CONSUMER_SECRET"
-        - name: ACCESS_TOKEN
-          value: "YOUR_ACCESS_TOKEN"
-        - name: ACCESS_TOKEN_SECRET
-          value: "YOUR_ACCESS_TOKEN_SECRET"      
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: quakeflow-streamlit
-spec:
-  selector:
-    app: quakeflow-streamlit
-  ports:
-    - protocol: TCP
-      port: 8501
-      targetPort: 8501
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: quakeflow-streamlit
+#   labels:
+#     app: quakeflow-streamlit
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: quakeflow-streamlit
+#   template:
+#     metadata:
+#       labels:
+#         app: quakeflow-streamlit
+#     spec:
+#       containers:
+#       - name: quakeflow-streamlit
+#         image: quakeflow-streamlit:1.0
+#         ports:
+#         - containerPort: 8501
+#         imagePullPolicy: Never
+#         resources:
+#           requests:
+#             cpu: "250m"
+#         env:
+#         - name: CONSUMER_KEY
+#           value: "YOUR_CONSUMER_KEY"
+#         - name: CONSUMER_SECRET
+#           value: "YOUR_CONSUMER_SECRET"
+#         - name: ACCESS_TOKEN
+#           value: "YOUR_ACCESS_TOKEN"
+#         - name: ACCESS_TOKEN_SECRET
+#           value: "YOUR_ACCESS_TOKEN_SECRET"      
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: quakeflow-streamlit
+# spec:
+#   selector:
+#     app: quakeflow-streamlit
+#   ports:
+#     - protocol: TCP
+#       port: 8501
+#       targetPort: 8501
 

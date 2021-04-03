@@ -6,10 +6,10 @@ from pyspark.sql import SparkSession
 import os
 import numpy as np
 import requests
-PHASENET_API_URL = "http://localhost:8000"
-BROKER_URL = 'localhost:9092'
-# PHASENET_API_URL = "http://phasenet-api:8000"
-# BROKER_URL = 'my-kafka-headless:9092'
+# PHASENET_API_URL = "http://localhost:8000"
+# BROKER_URL = 'localhost:9092'
+PHASENET_API_URL = "http://phasenet-api:8000"
+BROKER_URL = 'quakeflow-kafka-headless:9092'
 
 os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1 pyspark-shell'
 

@@ -76,16 +76,16 @@ def replay_data(producer):
 
         # Send stream of station data to Kafka
 
-        ## for spark.py
-        #for i, station_id in enumerate(fakedata['station_id']):
+        # for spark.py
+        # for i, station_id in enumerate(fakedata['station_id']):
         #    producer.send('waveform_raw', key=fakedata["station_id"][i],
         #                  value=(ts, vecs[i].tolist()))
 
-        ## for spark_structure.py
+        # for spark_structure.py
         for i, station_id in enumerate(fakedata['station_id']):
             producer.send('waveform_raw', key=fakedata["station_id"][i],
-                          value={"timestamp":ts, "vec":vecs[i].tolist()})
-        
+                          value={"timestamp": ts, "vec": vecs[i].tolist()})
+
         # producer.send('waveform_raw', key=fakedata["station_id"][i],
         #         value=vecs[i].tolist())
 
@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
     # TODO Will need to clean up this with better env config
     try:
-        BROKER_URL = 'my-kafka-headless:9092'
+        BROKER_URL = 'quakeflow-kafka-headless:9092'
         producer = KafkaProducer(bootstrap_servers=[BROKER_URL],
                                  key_serializer=lambda x: dumps(x).encode('utf-8'),
                                  value_serializer=lambda x: dumps(x).encode('utf-8'))
