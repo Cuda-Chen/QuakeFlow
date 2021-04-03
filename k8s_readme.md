@@ -1,6 +1,10 @@
 # Quick readme, not detailed
 
 ## All-in-one script
+You need to preinstall [helm](https://helm.sh/), [kubectl](https://kubernetes.io/docs/tasks/tools/), [docker](https://docs.docker.com/engine/install/) and [minikube](https://minikube.sigs.k8s.io/docs/start/) (or any other local Kubernetes framework)
+
+Then deploy everything with the following script!
+
 ```
 $ git clone --recurse-submodules -j8 git@github.com:wayneweiqiang/QuakeFlow.git
 $ sh deploy_local.sh
