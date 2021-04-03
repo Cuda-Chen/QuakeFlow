@@ -1,5 +1,10 @@
 # Quick readme, not detailed
 
+## All-in-one script
+```
+$ git clone --recurse-submodules -j8 git@github.com:wayneweiqiang/QuakeFlow.git
+$ sh deploy_local.sh
+```
 
 ## Prebuilt Kafka 
 
@@ -75,4 +80,6 @@ kubectl delete deploy quakeflow-spark
 ```
 kubectl delete -f quakeflow-delpoyment.yaml   
 ```
+
+
 

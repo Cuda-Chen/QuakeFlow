@@ -20,6 +20,9 @@ spec:
         ports:
         - containerPort: 8000
         imagePullPolicy: Never
+        resources:
+          requests:
+            cpu: "250m"
 ---
 apiVersion: v1
 kind: Service
@@ -55,6 +58,9 @@ spec:
         ports:
         - containerPort: 8001
         imagePullPolicy: Never
+        resources:
+          requests:
+            cpu: "250m"
 ---
 apiVersion: v1
 kind: Service
@@ -88,6 +94,9 @@ spec:
       - name: spark
         image: quakeflow-spark:1.0
         imagePullPolicy: Never
+        resources:
+          requests:
+            cpu: "250m"
         volumeMounts:
         - name: tz-config
           mountPath: /etc/localtime
@@ -117,6 +126,9 @@ spec:
       - name: waveform
         image: quakeflow-waveform:1.0
         imagePullPolicy: Never
+        resources:
+          requests:
+            cpu: "250m"
 # ---
 # apiVersion: apps/v1
 # kind: Deployment
