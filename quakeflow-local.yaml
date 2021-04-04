@@ -20,6 +20,9 @@ spec:
         ports:
         - containerPort: 8000
         imagePullPolicy: Never
+        resources:
+          requests:
+            cpu: "250m"
 ---
 apiVersion: v1
 kind: Service
@@ -55,6 +58,9 @@ spec:
         ports:
         - containerPort: 8001
         imagePullPolicy: Never
+        resources:
+          requests:
+            cpu: "250m"
 ---
 apiVersion: v1
 kind: Service
@@ -88,6 +94,9 @@ spec:
       - name: spark
         image: quakeflow-spark:1.0
         imagePullPolicy: Never
+        resources:
+          requests:
+            cpu: "250m"
         volumeMounts:
         - name: tz-config
           mountPath: /etc/localtime
@@ -117,74 +126,54 @@ spec:
       - name: waveform
         image: quakeflow-waveform:1.0
         imagePullPolicy: Never
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: quakeflow-zookeeper
-  labels:
-    app: quakeflow-zookeeper
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: quakeflow-zookeeper
-  template:
-    metadata:
-      labels:
-        app: quakeflow-zookeeper
-    spec:
-      containers:
-      - name: quakeflow-zookeeper
-        image: quakeflow-zookeeper:1.0
-        ports:
-        - containerPort: 2181
-        imagePullPolicy: Never
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: quakeflow-zookeeper
-spec:
-  selector:
-    app: quakeflow-zookeeper
-  ports:
-    - protocol: TCP
-      port: 2181
-      targetPort: 2181
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: quakeflow-kafka
-  labels:
-    app: quakeflow-kafka
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: quakeflow-kafka
-  template:
-    metadata:
-      labels:
-        app: quakeflow-kafka
-    spec:
-      containers:
-      - name: quakeflow-kafka
-        image: quakeflow-kafka:1.0
-        ports:
-        - containerPort: 9092
-        imagePullPolicy: Never
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: quakeflow-kafka
-spec:
-  selector:
-    app: quakeflow-kafka
-  ports:
-    - protocol: TCP
-      port: 9092
-      targetPort: 9092
----
+        resources:
+          requests:
+            cpu: "250m"
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: quakeflow-streamlit
+#   labels:
+#     app: quakeflow-streamlit
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: quakeflow-streamlit
+#   template:
+#     metadata:
+#       labels:
+#         app: quakeflow-streamlit
+#     spec:
+#       containers:
+#       - name: quakeflow-streamlit
+#         image: quakeflow-streamlit:1.0
+#         ports:
+#         - containerPort: 8501
+#         imagePullPolicy: Never
+#         resources:
+#           requests:
+#             cpu: "250m"
+#         env:
+#         - name: CONSUMER_KEY
+#           value: "YOUR_CONSUMER_KEY"
+#         - name: CONSUMER_SECRET
+#           value: "YOUR_CONSUMER_SECRET"
+#         - name: ACCESS_TOKEN
+#           value: "YOUR_ACCESS_TOKEN"
+#         - name: ACCESS_TOKEN_SECRET
+#           value: "YOUR_ACCESS_TOKEN_SECRET"      
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: quakeflow-streamlit
+# spec:
+#   selector:
+#     app: quakeflow-streamlit
+#   ports:
+#     - protocol: TCP
+#       port: 8501
+#       targetPort: 8501
+

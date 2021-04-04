@@ -6,10 +6,10 @@ from pyspark.sql import SparkSession
 import os
 import numpy as np
 import requests
-PHASENET_API_URL = "http://localhost:8000"
-BROKER_URL = 'localhost:9092'
-# PHASENET_API_URL = "http://phasenet-api:8000"
-# BROKER_URL = 'my-kafka-headless:9092'
+# PHASENET_API_URL = "http://localhost:8000"
+# BROKER_URL = 'localhost:9092'
+PHASENET_API_URL = "http://phasenet-api:8000"
+BROKER_URL = 'quakeflow-kafka-headless:9092'
 
 ## For seedlink dataformat
 WATERMARK_DELAY = "10 seconds"
@@ -36,7 +36,7 @@ df = df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)", "timestamp")\
     .withColumn("value", F.from_json(col("value"), schema))\
     .withColumn("vec", col('value.vec'))\
     .withColumn("vec_timestamp", col('value.timestamp'))\
-    .withColumn("vec_timestamp_utc", F.from_utc_timestamp(col('value.timestamp'), "UTC"))\
+    .withColumn("vec_timestamp_utc", F.from_utc_timestamp(col('value.timestamp'), "UTC"))
 
 ## For seedlink dataformat
 df_window = df.withWatermark("vec_timestamp_utc", WATERMARK_DELAY) \
@@ -80,6 +80,7 @@ def foreach_batch_function(df_batch, batch_id):
             print('Phasenet & GMMA error', error)
 
     return None
+
 
 query = df_window.writeStream \
     .format("memory")\
