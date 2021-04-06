@@ -9,63 +9,114 @@ import pickle
 import datetime
 import requests
 import logging
+import os
 import obspy
 from obspy.clients.seedlink.easyseedlink import create_client, EasySeedLinkClient
 from obspy.clients.fdsn import Client
 from collections import defaultdict
-
-NETWORK = "UW"
-MIN_LAT = 46.6
-MAX_LAT = 48.6
-MIN_LON = -123.6
-MAX_LON = -121.6
-CENTER = ((MIN_LON + MAX_LON)/2.0, (MIN_LAT + MAX_LAT)/2.0)
-PI = 3.1415926
-DEGREE2KM = PI*6371/180
-CHANNELS = "HHE,HHN,HHZ"
-
-def timestamp(x): return x.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
 
 ## realtime station information
 # http://ds.iris.edu/gmap/#network=_REALTIME&starttime=2021-03-01&datacenter=IRISDMC&networktype=permanent&planet=earth
 # 
 # http://ds.iris.edu/gmap/#network=_REALTIME&channel=HH*&starttime=2021-03-01&datacenter=IRISDMC&networktype=permanent&planet=earth
 
-stations = pd.read_csv("realtime-stations.txt", sep="|",  header=None, skiprows=3, names=["network", "station", "latitude", "longitude", "elevation(m)", "location", "starttime", "endtime"])
-stations = stations[stations["network"] == NETWORK]
+def timestamp(x): return x.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+
+##################### Config #####################
+pi = 3.1415926
+degree2km = pi*6371/180
+
+## Location
+# center = (-115.53, 32.98) #salton sea
+# center = (-117.504, 35.705) #ridgecrest
+center = (-155.32, 19.39) #havaii
+horizontal_degree = 2.0
+vertical_degree = 2.0
+
+## Time range
+starttime = obspy.UTCDateTime("2021-04-05T00") #ridgecrest
+endtime = obspy.UTCDateTime("2021-04-06T00") ## not included
+
+## seismic stations
+network_list = ["HV", "PT"]
+channel_list = "HH*,BH*,EH*"
+# channel_list = "HHE,HHN,HHZ,BHE,BHN,BHZ,EHE,EHN,EHZ"
+# channel_list = "HHE,HHN,HHZ"
+
+## data center
+client = "IRIS"
+
+config = {}
+config["center"] = center
+config["xlim_degree"] = [center[0]-horizontal_degree/2, center[0]+horizontal_degree/2]
+config["ylim_degree"] = [center[1]-vertical_degree/2, center[1]+vertical_degree/2]
+config["degree2km"] = degree2km
+config["starttime"] = starttime.datetime
+config["endtime"] = endtime.datetime
+config["networks"] = network_list
+config["channels"] = channel_list
+config["client"] = client
+
+with open("config.pkl", "wb") as fp:
+    pickle.dump(config, fp)
+
+##################### realtime streaming station list #####################
+stations_total = pd.read_csv("realtime-stations.txt", sep="|",  header=None, skiprows=3, names=["network", "station", "latitude", "longitude", "elevation(m)", "location", "starttime", "endtime"])
+stations_total = stations_total[stations_total["network"].isin(config["networks"])]
 
 plt.figure()
-plt.subplot(121)
-plt.plot(stations["longitude"], stations["latitude"], '^')
-plt.axis("scaled")
+plt.plot(stations_total["longitude"], stations_total["latitude"], '^')
+# plt.axis("scaled")
 
-stations = stations[(MIN_LAT < stations["latitude"]) & (stations["latitude"] < MAX_LAT)]
-stations = stations[(MIN_LON < stations["longitude"]) & (stations["longitude"] < MAX_LON)]
-stations["station_id"] = stations["network"] + "." + stations["station"]
-stations = stations.reset_index()
-print("Selected num of stations: ", len(stations))
+stations_select = stations_total[(config["xlim_degree"][0] < stations_total["longitude"]) & (stations_total["longitude"] < config["xlim_degree"][1])\
+& (config["ylim_degree"][0] < stations_total["latitude"]) & (stations_total["latitude"] < config["ylim_degree"][1])]
 
-# plt.figure()
-plt.subplot(121)
-plt.plot(stations["longitude"], stations["latitude"], '^')
-plt.axis("scaled")
-plt.savefig("stations.png")
+stations_select = stations_select.reset_index()
+print("Number of selected stations: ", len(stations_select))
 
-stations_obspy = Client("IRIS").get_stations(network = NETWORK,
-                                       station = "*",
-                                       starttime=obspy.UTCDateTime("2021-04-03"),
-                                       minlongitude=MIN_LON,
-                                       maxlongitude=MAX_LON,
-                                       minlatitude=MIN_LAT,
-                                       maxlatitude=MAX_LAT,
-                                       channel=CHANNELS,
+##################### download station info #####################
+stations = Client("IRIS").get_stations(network = ",".join(config["networks"]),
+                                       station = ",".join(stations_select["station"]),
+                                       starttime=config["starttime"],
+                                       endtime=config["endtime"],
+                                       minlongitude=config["xlim_degree"][0],
+                                       maxlongitude=config["xlim_degree"][1],
+                                       minlatitude=config["ylim_degree"][0],
+                                       maxlatitude=config["ylim_degree"][1],
+                                       channel=config["channels"],
                                        level="response")#,
+#                                            filename="stations.xml")
+
+#     stations = obspy.read_inventory("stations.xml")
+print("Number of downloaded stations: {}".format(sum([len(x) for x in stations])))
+# stations.plot('local', outfile="stations.png")
+# stations.plot('local')
+
+station_locs = defaultdict(dict)
 station_resp = defaultdict(dict)
-for network in stations_obspy:
+for network in stations:
     for station in network:
         for chn in station:
-            sid = f"{network.code}.{station.code}.{chn.location_code}.{chn.code}"            
-            station_resp[sid] = chn.response.instrument_sensitivity.value
+            sid = f"{network.code}.{station.code}.{chn.location_code}.{chn.code[:-1]}"
+            station_resp[f"{network.code}.{station.code}.{chn.location_code}.{chn.code}"] =\
+                chn.response.instrument_sensitivity.value
+            if sid in station_locs:
+                station_locs[sid]["component"] += f",{chn.code[-1]}"
+                station_locs[sid]["response"] += f",{chn.response.instrument_sensitivity.value:.2f}"
+            else:
+                component = f"{chn.code[-1]}"
+                response = f"{chn.response.instrument_sensitivity.value:.2f}"
+                dtype = chn.response.instrument_sensitivity.input_units.lower()
+                tmp_dict = {}
+                tmp_dict["longitude"], tmp_dict["latitude"], tmp_dict["elevation(m)"] = chn.longitude, chn.latitude, chn.elevation
+                tmp_dict["component"], tmp_dict["response"], tmp_dict["unit"] = component, response, dtype
+                station_locs[sid] = tmp_dict
+
+station_locs = pd.DataFrame.from_dict(station_locs, orient='index')
+station_locs.to_csv("stations.csv",
+                    sep="\t", float_format="%.3f",
+                    index_label="station",
+                    columns=["longitude", "latitude", "elevation(m)", "unit", "component", "response"])
 
 
 
@@ -77,6 +128,8 @@ class Client(EasySeedLinkClient):
     def on_data(self, trace):
         print('Received trace:', trace.id)
         print(trace)
+        if trace.stats.sampling_rate != 100:
+            trace = trace.interpolate(100, method="linear")
         value = {"timestamp": timestamp(trace.stats.starttime.datetime), 
                  "vec":(trace.data/station_resp[trace.id]).tolist()}
         self.producer.send('waveform_raw', key=trace.id, value=value)
@@ -101,8 +154,9 @@ if __name__ == '__main__':
     logging.warning('Starting producer...')
 
     client = Client('rtserve.iris.washington.edu:18000', producer=producer)
-    for index, row in stations.iterrows():
-        client.select_stream(row["network"], row["station"], "HH?")
+    for x in station_locs.index:
+        x = x.split(".")
+        client.select_stream(x[0], x[1], x[-1]+"?")
     client.run()
 
 
