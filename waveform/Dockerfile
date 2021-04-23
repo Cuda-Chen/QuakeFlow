@@ -14,4 +14,5 @@ SHELL ["conda", "run", "-n", "cs329s", "/bin/bash", "-c"]
 COPY . /app
 
 # Start API server
-ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cs329s", "python", "producer.py"]
+# ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cs329s", "python", "producer.py"]
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cs329s", "python", "producer_iris.py"]

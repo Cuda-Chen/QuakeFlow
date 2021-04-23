@@ -64,7 +64,7 @@ def foreach_batch_function(df_batch, batch_id):
 
     res = df_batch.collect()
     for x in res:
-        print(x.key, x.timestamp, len(x.vec), [len(x.vec[i]) for i in range(len(x.vec))])
+        # print(x.key, x.timestamp, len(x.vec), [len(x.vec[i]) for i in range(len(x.vec))])
         req = {
             'id': x.key,
             'timestamp': x.timestamp,  # workaround

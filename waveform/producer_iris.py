@@ -126,8 +126,8 @@ class Client(EasySeedLinkClient):
         self.producer = producer
     
     def on_data(self, trace):
-        print('Received trace:', trace.id)
-        print(trace)
+        # print('Received trace:', trace.id)
+        # print(trace)
         if trace.stats.sampling_rate != 100:
             trace = trace.interpolate(100, method="linear")
         value = {"timestamp": timestamp(trace.stats.starttime.datetime), 
