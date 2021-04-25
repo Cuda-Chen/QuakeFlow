@@ -75,7 +75,7 @@ try:
     BROKER_URL = 'quakeflow-kafka:9092'
     consumer = KafkaConsumer(
         bootstrap_servers=[BROKER_URL],
-        auto_offset_reset='earliest',
+        auto_offset_reset='latest',
         enable_auto_commit=True,
         key_deserializer=lambda x: loads(x.decode('utf-8')),
         value_deserializer=lambda x: loads(x.decode('utf-8'))
@@ -90,7 +90,7 @@ except BaseException:
         BROKER_URL = 'localhost:9092'
         consumer = KafkaConsumer(
             bootstrap_servers=[BROKER_URL],
-            auto_offset_reset='earliest',
+            auto_offset_reset='latest',
             enable_auto_commit=True,
             key_deserializer=lambda x: loads(x.decode('utf-8')),
             value_deserializer=lambda x: loads(x.decode('utf-8'))
@@ -413,7 +413,7 @@ if __name__ == "__main__":
     NUM_STATION = len(STATIONS)
     STATION_IDX = dict([(c, i) for i, c in enumerate(STATIONS["id"])])
 
-    REFRESH_SEC = 3
+    REFRESH_SEC = 10
     prev_time = time.time()
     
     dummy = 0
@@ -446,7 +446,7 @@ if __name__ == "__main__":
                 wave_std[key] = 0.5*wave_std[key] + 0.5*np.std(message.value['vec'])
                 if timestamp > LATEST_TIMESTAMP:
                     LATEST_TIMESTAMP = timestamp
-                print(f"LATEST_TIMESTAMP = {LATEST_TIMESTAMP}")
+                # print(f"LATEST_TIMESTAMP = {LATEST_TIMESTAMP}")
                 dummy += 1
 
         elif message.topic == "phasenet_picks":
