@@ -9,6 +9,7 @@ cd PhaseNet; docker build --tag phasenet-api:1.0 . ; cd ..;
 cd GMMA; docker build --tag gmma-api:1.0 . ; cd ..;
 cd spark; docker build --tag quakeflow-spark:1.0 .; cd ..;
 cd waveform; docker build --tag quakeflow-waveform:1.0 .; cd ..;
+cd streamlit; docker build --tag quakeflow-streamlit:1.0 .; cd ..;
 
 # Deploy Kafka with Helm, create client and add topics
 helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -29,3 +30,5 @@ kubectl autoscale deployment gmma-api --cpu-percent=80 --min=1 --max=10
 # Expose APIs
 kubectl expose deployment phasenet-api --type=LoadBalancer --name=phasenet-service
 kubectl expose deployment gmma-api --type=LoadBalancer --name=gmma-service
+kubectl expose deployment quakeflow-streamlit --type=LoadBalancer --name=streamlit-ui
+

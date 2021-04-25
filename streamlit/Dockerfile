@@ -17,4 +17,4 @@ EXPOSE 8501
 ENV PYTHONUNBUFFERED=1
 
 # Start API server
-ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cs329s", "streamlit", "run", "ui_streamlit.py"]
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cs329s", "streamlit", "run", "ui_streamlit_iris.py"]

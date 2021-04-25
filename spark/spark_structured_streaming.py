@@ -14,7 +14,7 @@ BROKER_URL = 'quakeflow-kafka-headless:9092'
 ## For seedlink dataformat
 WATERMARK_DELAY = "10 seconds"
 WINDOW_DURATION = "30 seconds"
-SLIDE_DURATION = "5 seconds"
+SLIDE_DURATION = "10 seconds"
 schema = StructType([StructField("timestamp", StringType()),
                      StructField("vec", ArrayType(FloatType()))])
 
