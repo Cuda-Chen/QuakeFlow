@@ -1,4 +1,5 @@
-![QuakeFlow logo](https://github.com/wayneweiqiang/QuakeFlow/blob/master/docs/assets/logo.png)
+<!-- ![QuakeFlow logo](https://github.com/wayneweiqiang/QuakeFlow/blob/master/docs/assets/logo.png) -->
+<img src="https://github.com/wayneweiqiang/QuakeFlow/blob/master/docs/assets/logo.png">
 
 ## A Quick Glance
 
