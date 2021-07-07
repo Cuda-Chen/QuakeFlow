@@ -1,40 +1,26 @@
-## Sample
+# QuakeFlow: a Scalable Deep-learning-based Earthquake Monitoring Workflow with Cloud Computing
 
-One more, finally. Or not? :)
+## 0. Install QuakeFlow
 
-Now:
+## 1. Data Download
 
-```
-$ some 
-```
+Please see the ["Data Downloading"](data.md) section for further details.
 
-Look what she said:
+## 2. Denoising: DeepDenoiser
 
-> This is it!
+Please see the ["Denoising"](deepdenoiser.md) section for further details.
 
-### Subtitle
+## 3. Phase Picking: PhaseNet
 
-And now this:
+Please see the ["Phase Picking"](phasenet.md) section for further details.
 
-- One
-- Two
-- Three
+## 4. Phase Association: GaMMA
 
+Please see the ["Phase Association"](gamma.md) section for further details.
 
-#### As well
+## 5. Earthquake Location
 
-#### As this
-
-### Another
-
-[a link](https://aws.com)
-
-More?
+Please see the ["Earthquake Location"](gamma.md) section for further details.
 
 
-Can we now have `the build`?
 
-NOW!
-
-
-Not gonna work, is it?
