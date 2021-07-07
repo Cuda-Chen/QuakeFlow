@@ -1,10 +1,12 @@
-site_name: Test docs
-site_description: 'A docs test'
-site_author: 'Michael Hausenblas'
+site_name: QuakeFlow
+site_description: 'QuakeFlow: a Scalable Deep-learning-based Earthquake Monitoring Workflow with Cloud Computing'
+site_author: 'Weiqiang Zhu'
 docs_dir: docs/
-repo_name: 'mhausenblas/mkdocs-template'
-repo_url: 'https://github.com/mhausenblas/mkdocs-template'
+repo_name: 'wayneweiqiang/QuakeFlow'
+repo_url: 'https://github.com/wayneweiqiang/QuakeFlow'
 nav:
     - Home: index.md
 theme:
   name: 'material'
+plugins:
+  - mkdocs-jupyter

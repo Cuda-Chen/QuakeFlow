@@ -1,8 +1,12 @@
-[submodule "GMMA"]
-	path = GMMA
-	url = https://github.com/wayneweiqiang/GMMA.git
-	branch = quakeflow
+[submodule "DeepDenoiser"]
+	path = DeepDenoiser
+ 	url = https://github.com/wayneweiqiang/DeepDenoiser.git
+	branch = master
 [submodule "PhaseNet"]
 	path = PhaseNet
  	url = https://github.com/wayneweiqiang/PhaseNet.git
+	branch = quakeflow
+[submodule "GMMA"]
+	path = GMMA
+	url = https://github.com/wayneweiqiang/GMMA.git
 	branch = quakeflow
