@@ -1,6 +1,6 @@
 [submodule "DeepDenoiser"]
 	path = DeepDenoiser
- 	url = https://github.com/wayneweiqiang/DeepDenoiser.git
+	url = https://github.com/wayneweiqiang/DeepDenoiser.git
 	branch = master
 [submodule "PhaseNet"]
 	path = PhaseNet
