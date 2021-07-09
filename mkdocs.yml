@@ -5,13 +5,17 @@ docs_dir: docs/
 repo_name: 'wayneweiqiang/QuakeFlow'
 repo_url: 'https://github.com/wayneweiqiang/QuakeFlow'
 nav:
-    - Pipeline Overview: README.md
-    - Data Downloading: data.md
-    - Denoising: deepdenoiser.md
-    - Phase Picking: phasenet.md
-    - Phase Association: gamma.md
-    - Earthquake Location: location.md
+    - Overview: README.md
+    - Pipeline: workflow.ipynb
+    - Visualization: plot_catalog.ipynb
+    - Deploy on cluster: k8s_readme.md
+    - Deploy on cloud: gcp_readme.md
 theme:
   name: 'material'
 plugins:
   - mkdocs-jupyter
+  - exclude:
+      glob:
+        - PhaseNet/*
+        - GMMA/*
+        - "*_demo"
