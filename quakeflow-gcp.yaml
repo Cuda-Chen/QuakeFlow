@@ -15,16 +15,16 @@ spec:
         app: phasenet
     spec:
       containers:
-      - name: phasenet
-        image: zhuwq0/phasenet-api:latest
-        ports:
-        - containerPort: 8000
-        imagePullPolicy: Always
-        resources:
-          # You must specify requests for CPU to autoscale
-          # based on CPU utilization
-          requests:
-            cpu: "250m"
+        - name: phasenet
+          image: zhuwq0/phasenet-api:latest
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: Always
+          resources:
+            # You must specify requests for CPU to autoscale
+            # based on CPU utilization
+            requests:
+              cpu: "250m"
 ---
 apiVersion: v1
 kind: Service
@@ -55,14 +55,14 @@ spec:
         app: gmma
     spec:
       containers:
-      - name: gmma
-        image: zhuwq0/gmma-api:latest
-        ports:
-        - containerPort: 8001
-        imagePullPolicy: Always
-        resources:
-          requests:
-            cpu: "250m"
+        - name: gmma
+          image: zhuwq0/gmma-api:latest
+          ports:
+            - containerPort: 8001
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "250m"
 ---
 apiVersion: v1
 kind: Service
@@ -93,12 +93,12 @@ spec:
         app: spark
     spec:
       containers:
-      - name: spark
-        image: zhuwq0/quakeflow-spark:1.0
-        imagePullPolicy: Always
-        resources:
-          requests:
-            cpu: "250m"
+        - name: spark
+          image: zhuwq0/quakeflow-spark:1.0
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "250m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -117,11 +117,45 @@ spec:
         app: waveform
     spec:
       containers:
-      - name: waveform
-        image: zhuwq0/quakeflow-waveform:1.0
-        imagePullPolicy: Always
-        resources:
-          requests:
-            cpu: "250m"
+        - name: waveform
+          image: zhuwq0/quakeflow-waveform:1.0
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "250m"
 ---
-
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quakeflow-ui
+  labels:
+    app: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+    spec:
+      containers:
+        - name: ui
+          image: zhuwq0/quakeflow-ui:1.0
+          ports:
+          - containerPort: 8005
+          imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quakeflow-ui
+spec:
+  selector:
+    app: ui
+  ports:
+    - protocol: TCP
+      port: 8005
+      targetPort: 8005
+---

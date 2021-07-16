@@ -25,14 +25,13 @@ kubectl apply -f quakeflow-gcp.yaml
 ```
 kubectl autoscale deployment phasenet-api --cpu-percent=80 --min=1 --max=10
 kubectl autoscale deployment gmma-api --cpu-percent=80 --min=1 --max=10
-kubectl autoscale deployment quakeflow-streamlit --cpu-percent=80 --min=1 --max=10
 ```
 
 4.2 Expose API
 ```
 kubectl expose deployment phasenet-api --type=LoadBalancer --name=phasenet-service
 kubectl expose deployment gmma-api --type=LoadBalancer --name=gmma-service
-kubectl expose deployment quakeflow-streamlit --type=LoadBalancer --name=streamlit-service
+kubectl expose deployment quakeflow-ui --type=LoadBalancer --name=quakeflow-ui
 ```
 
 5. Install Kafka
