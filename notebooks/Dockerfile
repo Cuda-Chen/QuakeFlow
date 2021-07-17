@@ -19,5 +19,6 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY env.yml /app
 RUN conda env update -f=env.yml -n base
+RUN pip install --upgrade -i https://pypi.anaconda.org/zhuwq0/simple gmma
 RUN conda clean --all 
 #SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
