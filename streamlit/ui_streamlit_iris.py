@@ -43,8 +43,8 @@ import pickle
 # )
 
 # # Lambdas and Constants
-def normalize(x): return (x - np.mean(x) + np.finfo(x.dtype).eps) / (np.std(x) + np.finfo(x.dtype).eps)
-def timestamp_seconds(x): return datetime.fromisoformat(x).timestamp()
+normalize =lambda x: (x - np.mean(x) + np.finfo(x.dtype).eps) / (np.std(x) + np.finfo(x.dtype).eps)
+timestamp_seconds =lambda x: datetime.fromisoformat(x).timestamp()
 
 # EVENT_MIN_GAP = 5
 # WINDOW_LENGTH = 100
@@ -80,11 +80,11 @@ try:
         key_deserializer=lambda x: loads(x.decode('utf-8')),
         value_deserializer=lambda x: loads(x.decode('utf-8'))
     )
+    use_kafka = True
     print('k8s kafka connection success!')
     consumer.subscribe(['waveform_raw', 'phasenet_picks', 'gmma_events'])
 except BaseException:
     print('k8s Kafka connection error')
-
     try:
         print('Connecting to local kafka')
         BROKER_URL = 'localhost:9092'
@@ -95,6 +95,7 @@ except BaseException:
             key_deserializer=lambda x: loads(x.decode('utf-8')),
             value_deserializer=lambda x: loads(x.decode('utf-8'))
         )
+        use_kafka = True
         print('local kafka connection success!')
         consumer.subscribe(['waveform_raw', 'phasenet_picks', 'gmma_events'])
 
@@ -339,6 +340,7 @@ def initialize_plot():
     ## Streamlit layout
     plot1, plot2, col1, col2, fig1, fig2, ax1, ax2, lines1, scatters1, scatters2 = None, None, None, None, None, None, None, None, None, None, None
     col1, col2 = st.beta_columns([1, 1])
+
     ## Initial plotting
     with col1:
         fig1, ax1 = plt.subplots(1, 1, figsize=(8, 5.8))
@@ -361,14 +363,15 @@ def initialize_plot():
         plot1 = st.pyplot(fig1)
 
 
-    with col2:
-        fig2, ax2 = plt.subplots(1, 1, figsize=(8, 5.8))
-        scatters2 = ax2.scatter([0], [0], s=50, c="k", marker="x", label="Earthquake")
-        ax2.legend()
-        ax2.set_xlim(CONFIG["xlim_degree"])
-        ax2.set_ylim(CONFIG["ylim_degree"])
-        ax2.title.set_text("Detected Earthquakes")
-        plot2 = st.pyplot(fig2)
+    # with col2:
+    #     fig2, ax2 = plt.subplots(1, 1, figsize=(8, 5.8))
+    #     scatters2 = ax2.scatter([0], [0], s=50, c="k", marker="x", label="Earthquake")
+    #     ax2.legend()
+    #     ax2.set_xlim(CONFIG["xlim_degree"])
+    #     ax2.set_ylim(CONFIG["ylim_degree"])
+    #     ax2.title.set_text("Detected Earthquakes")
+    #     plot2 = st.pyplot(fig2)
+
     #     experimental_df = pd.DataFrame({'lat': [], 'lon': [], 'z': [], 'mag': [], 'time': [], 'size': []})
     #     event_df = pd.DataFrame({'Magnitude': [], 'Time': [], 'Latitude (deg)': [], 'Longitude (deg)': [], 'Depth (km)': []})
     #     experimental = px.scatter_mapbox(
