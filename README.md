@@ -23,7 +23,7 @@ To deploy the system on Kubernetes on-premise, check out the [Kubernetes README]
 
 To test the code locally, check out the guide [here](kafka-spark).
 
-## User-Facing Platform
+<!-- ## User-Facing Platform
 
 ### Streamlit Web App
 
@@ -32,5 +32,5 @@ To test the code locally, check out the guide [here](kafka-spark).
 
 ### Twitter Bot
 
-<img src="https://i.imgur.com/50kVK4Q.png" width="400px">
+<img src="https://i.imgur.com/50kVK4Q.png" width="400px"> -->
 
