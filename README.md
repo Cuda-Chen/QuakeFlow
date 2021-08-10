@@ -1,9 +1,11 @@
 <img src="https://raw.githubusercontent.com/wayneweiqiang/QuakeFlow/master/docs/assets/logo.png">
 
 # QuakeFlow: A Scalable Deep-learning-based Earthquake Monitoring Workflow with Cloud Computing
-![documentation](https://github.com/wayneweiqiang/QuakeFlow/actions/workflows/docs.yml/badge.svg)
+[![documentation](https://github.com/wayneweiqiang/QuakeFlow/actions/workflows/docs.yml/badge.svg)](https://wayneweiqiang.github.io/QuakeFlow/)
 
 ## Overview
+
+![](https://raw.githubusercontent.com/wayneweiqiang/QuakeFlow/master/docs/assets/inference_pipeline_plotly.png)
 
 QuakeFlow is a scalable deep-learning-based earthquake monitoring system with cloud computing. It applies the state-of-art deep learning/machine learning models for earthquake detection. With auto-scaling enabled on Kubernetes, our system can balance computational loads with computational resources. 
 
@@ -21,7 +23,7 @@ To deploy the system on Kubernetes on-premise, check out the [Kubernetes README]
 
 To test the code locally, check out the guide [here](kafka-spark).
 
-## User-Facing Platform
+<!-- ## User-Facing Platform
 
 ### Streamlit Web App
 
@@ -30,5 +32,5 @@ To test the code locally, check out the guide [here](kafka-spark).
 
 ### Twitter Bot
 
-<img src="https://i.imgur.com/50kVK4Q.png" width="400px">
+<img src="https://i.imgur.com/50kVK4Q.png" width="400px"> -->
 
