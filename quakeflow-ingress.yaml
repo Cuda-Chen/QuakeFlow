@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: quakeflow
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: quakeflow
+  labels:
+    app: quakeflow
+spec:
+  backend:
+    serviceName: quakeflow-ui
+    servicePort: 8005

@@ -68,8 +68,8 @@ event_queue = deque()
 
 PLOT_CHANNEL = "HHZ"
 WAVE_WINDOW_LENGTH = 3000
-PICK_WINDOW_LENGTH = WAVE_WINDOW_LENGTH * 2 * 60 * 24
-EVENT_WINDOW_LENGTH = WAVE_WINDOW_LENGTH * 2 * 60 * 24
+PICK_WINDOW_LENGTH = WAVE_WINDOW_LENGTH * 2 * 60 * 24 * 30
+EVENT_WINDOW_LENGTH = WAVE_WINDOW_LENGTH * 2 * 60 * 24 * 30
 DELTAT = 0.01
 PICK_COLOR = {"p": "blue", "s": "red"}
 
@@ -97,8 +97,10 @@ def run_consumser():
                 wave_vec[key].extend(message.value['vec'])
                 timestamp = timestamp_seconds(message.value['timestamp']) + len(message.value['vec']) * DELTAT
                 wave_time[key] = timestamp
-                wave_mean[key] = 0.5 * wave_mean[key] + 0.5 * np.mean(message.value['vec'])
-                wave_std[key] = 0.5 * wave_std[key] + 0.5 * np.std(message.value['vec'])
+                #wave_mean[key] = 0.5 * wave_mean[key] + 0.5 * np.mean(message.value['vec'])
+                #wave_std[key] = 0.5 * wave_std[key] + 0.5 * np.std(message.value['vec'])
+                wave_mean[key] = np.mean(message.value['vec'])
+                wave_std[key] = np.std(message.value['vec'])
                 if timestamp > latest_timestamp:
                     latest_timestamp = timestamp
 
@@ -384,8 +386,8 @@ def gen_wind_direction(interval):
             lon="longitude",
             hover_data=["time", "magnitude"],
             color_discrete_sequence=["fuchsia"],  
-            size="size",
-            zoom=5,
+            #size="size",
+            zoom=6,
             height=300,
             opacity=0.5,
         )
