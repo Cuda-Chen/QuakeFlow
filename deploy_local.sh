@@ -1,3 +1,5 @@
+set -eux
+
 # Switch to local minikube env
 eval $(minikube docker-env)
 
@@ -9,7 +11,8 @@ cd PhaseNet; docker build --tag phasenet-api:1.0 . ; cd ..;
 cd GMMA; docker build --tag gmma-api:1.0 . ; cd ..;
 cd spark; docker build --tag quakeflow-spark:1.0 .; cd ..;
 cd waveform; docker build --tag quakeflow-waveform:1.0 .; cd ..;
-cd streamlit; docker build --tag quakeflow-streamlit:1.0 .; cd ..;
+#cd streamlit; docker build --tag quakeflow-streamlit:1.0 .; cd ..;
+cd ui; docker build --tag quakeflow-plotly:1.0 .; cd ..;
 
 # Deploy Kafka with Helm, create client and add topics
 helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -24,11 +27,11 @@ kubectl apply -f metrics-server.yaml
 kubectl apply -f quakeflow-local.yaml
 
 # Add autoscaling
-kubectl autoscale deployment phasenet-api --cpu-percent=80 --min=1 --max=10
-kubectl autoscale deployment gmma-api --cpu-percent=80 --min=1 --max=10
+#kubectl autoscale deployment phasenet-api --cpu-percent=80 --min=1 --max=10
+#kubectl autoscale deployment gmma-api --cpu-percent=80 --min=1 --max=10
 
 # Expose APIs
 kubectl expose deployment phasenet-api --type=LoadBalancer --name=phasenet-service
 kubectl expose deployment gmma-api --type=LoadBalancer --name=gmma-service
-kubectl expose deployment quakeflow-streamlit --type=LoadBalancer --name=streamlit-ui
-
+#kubectl expose deployment quakeflow-streamlit --type=LoadBalancer --name=streamlit-ui
+kubectl expose deployment quakeflow-plotly --type=LoadBalancer --name=plotly-service

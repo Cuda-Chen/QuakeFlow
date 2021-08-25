@@ -122,27 +122,74 @@ spec:
           requests:
             cpu: "250m"
 ---
+#apiVersion: apps/v1
+#kind: Deployment
+#metadata:
+#  name: quakeflow-streamlit
+#  labels:
+#    app: quakeflow-streamlit
+#spec:
+#  replicas: 1
+#  selector:
+#    matchLabels:
+#      app: quakeflow-streamlit
+#  template:
+#    metadata:
+#      labels:
+#        app: quakeflow-streamlit
+#    spec:
+#      containers:
+#      - name: quakeflow-streamlit
+#        image: quakeflow-streamlit:1.0
+#        ports:
+#        - containerPort: 8501
+#        imagePullPolicy: Never
+#        resources:
+#          requests:
+#            cpu: "500m"
+#        # env:
+#        # - name: CONSUMER_KEY
+#        #   value: "YOUR_CONSUMER_KEY"
+#        # - name: CONSUMER_SECRET
+#        #   value: "YOUR_CONSUMER_SECRET"
+#        # - name: ACCESS_TOKEN
+#        #   value: "YOUR_ACCESS_TOKEN"
+#        # - name: ACCESS_TOKEN_SECRET
+#        #   value: "YOUR_ACCESS_TOKEN_SECRET"      
+#---
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: quakeflow-streamlit
+#spec:
+#  selector:
+#    app: quakeflow-streamlit
+#  ports:
+#    - protocol: TCP
+#      port: 8501
+#      targetPort: 8501
+#---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: quakeflow-streamlit
+  name: quakeflow-plotly
   labels:
-    app: quakeflow-streamlit
+    app: quakeflow-plotly
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: quakeflow-streamlit
+      app: quakeflow-plotly
   template:
     metadata:
       labels:
-        app: quakeflow-streamlit
+        app: quakeflow-plotly
     spec:
       containers:
-      - name: quakeflow-streamlit
-        image: quakeflow-streamlit:1.0
+      - name: quakeflow-plotly
+        image: quakeflow-plotly:1.0
         ports:
-        - containerPort: 8501
+        - containerPort: 8005
         imagePullPolicy: Never
         resources:
           requests:
@@ -160,12 +207,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: quakeflow-streamlit
+  name: quakeflow-plotly
 spec:
   selector:
-    app: quakeflow-streamlit
+    app: quakeflow-plotly
   ports:
     - protocol: TCP
-      port: 8501
-      targetPort: 8501
+      port: 8005
+      targetPort: 8005
 
