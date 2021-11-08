@@ -21,12 +21,18 @@ class Config:
     vertical = 0.5
 
 
-def load_end2end(fname):
+def load_eqnet_catalog(fname, config=Config()):
+
     catalog = pd.read_csv(fname, sep="\t", parse_dates=['time'])
     catalog["date"] = catalog["time"]
     catalog["X"] = catalog["x(km)"]
     catalog["Y"] = catalog["y(km)"]
     catalog["Z"] = catalog["z(km)"]
+    catalog["time"] = catalog["date"]
+    catalog["magnitude"] = 0.0
+    catalog["longitude"] = catalog["X"] / config.degree2km + (config.center[1] - config.horizontal)
+    catalog["latitude"] = catalog["Y"] /  config.degree2km + (config.center[0] - config.vertical)
+    catalog["depth(m)"] = catalog["Z"] * 1e3
     return catalog
 
 
@@ -275,12 +281,12 @@ def load_GaMMA_catalog(fname, config=Config()):
 def filter_catalog(catalog, start_datetime, end_datetime, xmin, xmax, ymin, ymax, config=Config()):
 
     selected_catalog = catalog[
-        (catalog["date"] > start_datetime)
-        & (catalog["date"] < end_datetime)
-        & (catalog['X'] > xmin)
-        & (catalog['X'] < xmax)
-        & (catalog['Y'] > ymin)
-        & (catalog['Y'] < ymax)
+        (catalog["date"] >= start_datetime)
+        & (catalog["date"] <= end_datetime)
+        & (catalog['X'] >= xmin)
+        & (catalog['X'] <= xmax)
+        & (catalog['Y'] >= ymin)
+        & (catalog['Y'] <= ymax)
     ]
     print(f"Filtered catalog {start_datetime}-{end_datetime}: {len(selected_catalog)} events")
 

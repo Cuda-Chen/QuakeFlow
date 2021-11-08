@@ -5,7 +5,7 @@ metadata:
   labels:
     app: phasenet
 spec:
-  replicas: 3
+  # replicas: 1
   selector:
     matchLabels:
       app: phasenet
@@ -16,15 +16,33 @@ spec:
     spec:
       containers:
         - name: phasenet
-          image: zhuwq0/phasenet-api:latest
+          image: zhuwq0/phasenet-api:1.0
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
           resources:
-            # You must specify requests for CPU to autoscale
-            # based on CPU utilization
             requests:
-              cpu: "250m"
+              cpu: "800m"
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 600
+            periodSeconds: 30
 ---
 apiVersion: v1
 kind: Service
@@ -37,6 +55,8 @@ spec:
     - protocol: TCP
       port: 8000
       targetPort: 8000
+  type: LoadBalancer
+  # type: NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -45,7 +65,7 @@ metadata:
   labels:
     app: gmma
 spec:
-  replicas: 3
+  # replicas: 1
   selector:
     matchLabels:
       app: gmma
@@ -56,13 +76,13 @@ spec:
     spec:
       containers:
         - name: gmma
-          image: zhuwq0/gmma-api:latest
+          image: zhuwq0/gmma-api:1.0
           ports:
             - containerPort: 8001
           imagePullPolicy: Always
           resources:
             requests:
-              cpu: "250m"
+              cpu: "200m"
 ---
 apiVersion: v1
 kind: Service
@@ -75,87 +95,90 @@ spec:
     - protocol: TCP
       port: 8001
       targetPort: 8001
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: quakeflow-spark
-  labels:
-    app: spark
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: spark
-  template:
-    metadata:
-      labels:
-        app: spark
-    spec:
-      containers:
-        - name: spark
-          image: zhuwq0/quakeflow-spark:1.0
-          imagePullPolicy: Always
-          resources:
-            requests:
-              cpu: "250m"
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: quakeflow-waveform
-  labels:
-    app: waveform
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: waveform
-  template:
-    metadata:
-      labels:
-        app: waveform
-    spec:
-      containers:
-        - name: waveform
-          image: zhuwq0/quakeflow-waveform:1.0
-          imagePullPolicy: Always
-          resources:
-            requests:
-              cpu: "250m"
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: quakeflow-ui
-  labels:
-    app: ui
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ui
-  template:
-    metadata:
-      labels:
-        app: ui
-    spec:
-      containers:
-        - name: ui
-          image: zhuwq0/quakeflow-ui:1.0
-          ports:
-          - containerPort: 8005
-          imagePullPolicy: Always
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: quakeflow-ui
-spec:
-  selector:
-    app: ui
-  ports:
-    - protocol: TCP
-      port: 8005
-      targetPort: 8005
----
+  type: LoadBalancer
+  # type: NodePort
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: quakeflow-spark
+#   labels:
+#     app: spark
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: spark
+#   template:
+#     metadata:
+#       labels:
+#         app: spark
+#     spec:
+#       containers:
+#         - name: spark
+#           image: zhuwq0/quakeflow-spark:1.0
+#           imagePullPolicy: Always
+#           resources:
+#             requests:
+#               cpu: "250m"
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: quakeflow-waveform
+#   labels:
+#     app: waveform
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: waveform
+#   template:
+#     metadata:
+#       labels:
+#         app: waveform
+#     spec:
+#       containers:
+#         - name: waveform
+#           image: zhuwq0/quakeflow-waveform:1.0
+#           imagePullPolicy: Always
+#           resources:
+#             requests:
+#               cpu: "250m"
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: quakeflow-ui
+#   labels:
+#     app: quakeflow-ui
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: quakeflow-ui
+#   template:
+#     metadata:
+#       labels:
+#         app: quakeflow-ui
+#     spec:
+#       containers:
+#         - name: quakeflow-ui
+#           image: zhuwq0/quakeflow-ui:1.0
+#           ports:
+#             - containerPort: 8005
+#           imagePullPolicy: Always
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: quakeflow-ui
+# spec:
+#   selector:
+#     app: ui
+#   ports:
+#     - protocol: TCP
+#       port: 8005
+#       targetPort: 8005
+# ---
+
