@@ -20,7 +20,7 @@ def call_api(req):
     resp = None
     while resp is None:
         try:
-            resp = requests.get("http://34.83.118.102:8000/predict2gmma", json=req)
+            resp = requests.post("http://phasenet.quakeflow.com/predict", json=req)
         except Exception as e:
             print(e)
     # return resp
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     req_list = replay_data()
     num_parallel = len(req_list)
 
-    #for num_parallel in [1,2,4,8,16,32,64]:
+    # for num_parallel in [1,2,4,8,16,32,64]:
     #for num_parallel in [256, 128,64,32,16,8,4,2,1]:
     for num_parallel in [64,32,16,8,4,2,1]:
         # num_parallel = 8
@@ -106,7 +106,8 @@ if __name__ == '__main__':
             repeat = 10
         else:
             repeat = 3
-        for i in range(repeat):
+        #for i in range(repeat):
+        for i in range(1000):
             prev_time = time.time()
             # processes = replay_data()
             #req_list = replay_data()

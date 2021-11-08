@@ -281,12 +281,12 @@ def load_GaMMA_catalog(fname, config=Config()):
 def filter_catalog(catalog, start_datetime, end_datetime, xmin, xmax, ymin, ymax, config=Config()):
 
     selected_catalog = catalog[
-        (catalog["date"] > start_datetime)
-        & (catalog["date"] < end_datetime)
-        & (catalog['X'] > xmin)
-        & (catalog['X'] < xmax)
-        & (catalog['Y'] > ymin)
-        & (catalog['Y'] < ymax)
+        (catalog["date"] >= start_datetime)
+        & (catalog["date"] <= end_datetime)
+        & (catalog['X'] >= xmin)
+        & (catalog['X'] <= xmax)
+        & (catalog['Y'] >= ymin)
+        & (catalog['Y'] <= ymax)
     ]
     print(f"Filtered catalog {start_datetime}-{end_datetime}: {len(selected_catalog)} events")
 
